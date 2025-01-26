@@ -1,0 +1,82 @@
+package org.example;
+
+
+import java.util.Random;
+import java.util.Scanner;
+
+
+public class Task13 {
+
+
+   public static void main(String[] args) {
+       Scanner scanner = new Scanner(System.in);
+       Random random = new Random();
+
+
+       int rows, cols;
+
+
+       // Ввод размеров матрицы с проверкой корректности
+       while (true) {
+           try {
+               System.out.print("Введите количество строк матрицы: ");
+               rows = Integer.parseInt(scanner.nextLine());
+               if (rows <= 0) {
+                   throw new IllegalArgumentException("Количество строк должно быть положительным числом.");
+               }
+               System.out.print("Введите количество столбцов матрицы: ");
+               cols = Integer.parseInt(scanner.nextLine());
+               if (cols <= 0) {
+                   throw new IllegalArgumentException("Количество столбцов должно быть положительным числом.");
+               }
+               break; // Выход из цикла, если ввод корректен
+           } catch (NumberFormatException e) {
+               System.out.println("Некорректный ввод. Введите целое число.");
+           } catch (IllegalArgumentException e){
+               System.out.println(e.getMessage());
+           }
+       }
+
+
+       int[][] matrix;
+       int sumOfBorderElements;
+
+
+       do {
+           matrix = new int[rows][cols];
+           sumOfBorderElements = 0;
+
+
+           // Заполнение матрицы случайными числами и подсчет суммы граничных элементов
+           for (int i = 0; i < rows; i++) {
+               for (int j = 0; j < cols; j++) {
+                   matrix[i][j] = random.nextInt(100) + 1; // Случайное число от 1 до 100
+                   if (i == 0 || i == rows - 1 || j == 0 || j == cols - 1) {
+                       sumOfBorderElements += matrix[i][j];
+                   }
+               }
+           }
+
+
+       } while (sumOfBorderElements != 666);
+
+
+       // Вывод матрицы
+       System.out.println("Матрица с суммой граничных элементов 666:");
+       printMatrix(matrix);
+
+
+       scanner.close();
+   }
+
+
+   // Вспомогательный метод для вывода матрицы
+   public static void printMatrix(int[][] matrix) {
+       for (int[] row : matrix) {
+           for (int value : row) {
+               System.out.printf("%4d", value); // Форматированный вывод для выравнивания
+           }
+           System.out.println();
+       }
+   }
+}
