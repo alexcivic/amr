@@ -1,0 +1,73 @@
+ использовать maven
+писать в 1 файле
+добавить в pom
+<dependencies>
+ 	<dependency>
+     	<groupId>mysql</groupId>
+     	<artifactId>mysql-connector-java</artifactId>
+     	<version>8.0.33</version>
+ 	</dependency>
+
+ </dependencies>
+ 
+код для бд
+CREATE DATABASE WordDB;
+
+ USE WordDB;
+
+ CREATE TABLE Words (
+                    	id INT AUTO_INCREMENT PRIMARY KEY,
+                    	word VARCHAR(255) NOT NULL
+ );
+ 
+Код
+package org.example;
+
+ import java.sql.Connection;
+ import java.sql.DriverManager;
+ import java.sql.PreparedStatement;
+ import java.sql.SQLException;
+ import java.util.Scanner;
+
+ public class Task7 {
+ 	// Константы для подключения к базе данных
+ 	private static final String URL = "jdbc:mysql://localhost:3306/WordDB"; // Замените WordDB на имя вашей базы
+ 	private static final String USER = "root"; // Ваш пользователь
+ 	private static final String PASSWORD = "root"; // Ваш пароль
+
+ 	public static void main(String[] args) {
+     	Scanner scanner = new Scanner(System.in);
+
+     	// Запрашиваем слово от пользователя
+     	System.out.print("Введите слово: ");
+     	String word = scanner.nextLine();
+
+     	// Вывод слова в консоль 6 раз
+     	for (int i = 0; i < 6; i++) {
+         	System.out.println(word);
+     	}
+
+     	// Сохраняем слово в базе данных
+     	saveWordToDatabase(word);
+ 	}
+
+ 	private static void saveWordToDatabase(String word) {
+     	// SQL-запрос для вставки данных
+     	String insertQuery = "INSERT INTO Words (word) VALUES (?)";
+
+     	try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+          	PreparedStatement preparedStatement = connection.prepareStatement(insertQuery)) {
+
+         	System.out.println("Подключение к базе данных успешно!");
+
+         	// Устанавливаем значение слова и выполняем запрос
+         	preparedStatement.setString(1, word);
+             preparedStatement.executeUpdate();
+
+         	System.out.println("Слово успешно сохранено в базе данных.");
+
+     	} catch (SQLException e) {
+         	System.err.println("Ошибка подключения к базе данных: " + e.getMessage());
+     	}
+ 	}
+ }
