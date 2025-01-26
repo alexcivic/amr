@@ -1,0 +1,60 @@
+package org.example;
+
+import java.util.*;
+import java.sql.*;
+
+public class BinarySearchDemo {
+    private static final String URL = "jdbc:mysql://localhost:3306/mydatabase";
+    private static final String USER = "root";
+    private static final String PASSWORD = "root";
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Введите количество элементов: ");
+        int n = sc.nextInt();
+        System.out.print("Введите минимальное значение: ");
+        int minVal = sc.nextInt();
+        System.out.print("Введите максимальное значение: ");
+        int maxVal = sc.nextInt();
+
+        Random rnd = new Random();
+        List<Integer> list = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            list.add(rnd.nextInt(maxVal - minVal + 1) + minVal);
+        }
+
+        // Сортируем
+        Collections.sort(list);
+
+        // Бинарный поиск
+        System.out.print("Введите число для поиска: ");
+        int target = sc.nextInt();
+        int index = Collections.binarySearch(list, target);
+        if (index >= 0) {
+            System.out.println("Число найдено на индексе " + index);
+        } else {
+            System.out.println("Число не найдено");
+        }
+
+        // Сохранение в БД
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
+            String createSql = "CREATE TABLE IF NOT EXISTS search_list("
+                    + "id INT AUTO_INCREMENT PRIMARY KEY, "
+                    + "val INT)";
+            conn.createStatement().execute(createSql);
+            conn.createStatement().execute("TRUNCATE TABLE search_list");
+
+            String insertSql = "INSERT INTO search_list(val) VALUES (?)";
+            try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
+                for (Integer val : list) {
+                    ps.setInt(1, val);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+            // Можно сохранить и результат поиска, если нужно
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
