@@ -1,0 +1,45 @@
+import java.io.*;
+import java.util.Scanner;
+
+public class FileProcessor {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Введите имя файла (без .txt): ");
+        String fileName = sc.nextLine();
+        System.out.print("Введите операцию (сложение, умножение, разность): ");
+        String operation = sc.nextLine();
+
+        double num1, num2;
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName + ".txt"))) {
+            num1 = Double.parseDouble(br.readLine());
+            num2 = Double.parseDouble(br.readLine());
+        } catch (IOException e) {
+            System.out.println("Ошибка чтения файла");
+            return;
+        }
+
+        double result;
+        switch (operation) {
+            case "сложение":
+                result = num1 + num2;
+                break;
+            case "умножение":
+                result = num1 * num2;
+                break;
+            case "разность":
+                result = num1 - num2;
+                break;
+            default:
+                System.out.println("Неизвестная операция");
+                return;
+        }
+
+        System.out.println("Результат: " + result);
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName + "_out.txt"))) {
+            bw.write(String.valueOf(result));
+        } catch (IOException e) {
+            System.out.println("Ошибка записи файла");
+        }
+    }
+}
