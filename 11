@@ -1,0 +1,39 @@
+package org.example;
+
+
+import java.util.Scanner;
+
+
+public class Task11 {
+
+
+    public static long factorial(int n) {
+        if (n < 0) {
+            throw new IllegalArgumentException("Факториал определен только для неотрицательных чисел.");
+        }
+        if (n == 0) {
+            return 1; // Базовый случай
+        } else {
+            return n * factorial(n - 1); // Рекурсивный вызов
+        }
+    }
+
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+
+        System.out.print("Введите неотрицательное целое число: ");
+        int number = scanner.nextInt();
+
+
+        try {
+            long result = factorial(number);
+            System.out.println("Факториал числа " + number + " равен " + result);
+        } catch (IllegalArgumentException e) {
+            System.err.println(e.getMessage());
+        } finally {
+            scanner.close();
+        }
+    }
+}
