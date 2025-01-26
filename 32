@@ -1,0 +1,29 @@
+package org.example;
+
+import java.util.*;
+
+public class TwoDCollection {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Введите количество строк: ");
+        int rows = sc.nextInt();
+        System.out.print("Введите количество столбцов: ");
+        int cols = sc.nextInt();
+
+        int[][] arr = new int[rows][cols];
+        Random rnd = new Random();
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                arr[i][j] = rnd.nextInt(100); // 0..99
+            }
+        }
+
+        // Вывод таблицей
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                System.out.printf("%4d", arr[i][j]);
+            }
+            System.out.println();
+        }
+    }
+}
