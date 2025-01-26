@@ -1,0 +1,95 @@
+package org.example;
+
+
+import java.lang.Math;
+
+
+class Triangle {
+   protected double a;
+   protected double b;
+   protected double c;
+
+
+   public Triangle(double a, double b, double c) {
+       if (!isValidTriangle(a, b, c)) {
+           throw new IllegalArgumentException("Некорректные стороны треугольника.");
+       }
+       this.a = a;
+       this.b = b;
+       this.c = c;
+   }
+
+
+   private boolean isValidTriangle(double a, double b, double c) {
+       return a > 0 && b > 0 && c > 0 && a + b > c && a + c > b && b + c > a;
+   }
+
+
+   public double getPerimeter() {
+       return a + b + c;
+   }
+
+
+   public double getArea() {
+       double s = getPerimeter() / 2;
+       return Math.sqrt(s * (s - a) * (s - b) * (s - c)); // Формула Герона
+   }
+
+
+   @Override
+   public String toString() {
+       return "Треугольник со сторонами: a=" + a + ", b=" + b + ", c=" + c;
+   }
+}
+
+
+class RightTriangle extends Triangle {
+   public RightTriangle(double a, double b) {
+       super(a, b, Math.sqrt(a * a + b * b)); // Гипотенуза по теореме Пифагора
+       if (!isRightAngled(a, b)) {
+           throw new IllegalArgumentException("Треугольник не является прямоугольным.");
+       }
+   }
+
+
+   private boolean isRightAngled(double a, double b){
+       return Math.abs(a*a + b*b - c*c) < 0.0001; // Сравнение double с точностью
+   }
+
+
+   @Override
+   public String toString() {
+       return "Прямоугольный треугольник с катетами: a=" + a + ", b=" + b + ", гипотенуза c=" + c;
+   }
+
+
+   @Override
+   public double getArea() {
+       return 0.5 * a * b; // Площадь прямоугольного треугольника
+   }
+}
+
+
+public class Task14 {
+   public static void main(String[] args) {
+       try {
+           Triangle triangle1 = new Triangle(3, 4, 5);
+           System.out.println(triangle1);
+           System.out.println("Периметр: " + triangle1.getPerimeter());
+           System.out.println("Площадь: " + triangle1.getArea());
+
+
+           RightTriangle rightTriangle1 = new RightTriangle(3, 4);
+           System.out.println(rightTriangle1);
+           System.out.println("Периметр: " + rightTriangle1.getPerimeter());
+           System.out.println("Площадь: " + rightTriangle1.getArea());
+
+
+           //Примеры некорректных треугольников
+           //Triangle triangle2 = new Triangle(1, 2, 5); // Выбросит исключение
+           //RightTriangle rightTriangle2 = new RightTriangle(1, 2); //выбросит исключение, т.к. не прямоугольный
+       } catch (IllegalArgumentException e) {
+           System.err.println("Ошибка: " + e.getMessage());
+       }
+   }
+}
