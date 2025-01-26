@@ -1,0 +1,43 @@
+package org.example;
+
+import java.time.LocalDate;
+import java.time.DayOfWeek;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Scanner;
+
+public class DayOfWeekCalculator {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy"); // Формат ввода даты
+
+        System.out.print("Введите дату в формате дд.мм.гггг: ");
+        String dateString = scanner.nextLine();
+
+        try {
+            LocalDate date = LocalDate.parse(dateString, formatter);
+            DayOfWeek dayOfWeek = date.getDayOfWeek();
+            System.out.println("День недели: " + dayOfWeek.toString()); // Вывод дня недели
+            System.out.println("День недели (русский): " + getRussianDayOfWeek(dayOfWeek));
+        } catch (DateTimeParseException e) {
+            System.err.println("Некорректный формат даты. Используйте дд.мм.гггг.");
+        } finally {
+            scanner.close();
+        }
+    }
+
+    public static String getRussianDayOfWeek(DayOfWeek day) {
+        switch (day) {
+            case MONDAY: return "Понедельник";
+            case TUESDAY: return "Вторник";
+            case WEDNESDAY: return "Среда";
+            case THURSDAY: return "Четверг";
+            case FRIDAY: return "Пятница";
+            case SATURDAY: return "Суббота";
+            case SUNDAY: return "Воскресенье";
+            default: return ""; // Никогда не должно произойти
+        }
+    }
+}
+
