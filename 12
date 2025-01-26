@@ -1,0 +1,50 @@
+package org.example;
+
+public class MyDouble {
+
+    private final double value;
+
+    public MyDouble(double value) {
+        this.value = value;
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    public static MyDouble add(MyDouble a, MyDouble b) {
+        return new MyDouble(a.getValue() + b.getValue());
+    }
+
+    public static MyDouble divide(MyDouble a, MyDouble b) {
+        if (b.getValue() == 0) {
+            throw new ArithmeticException("Деление на ноль!");
+        }
+        return new MyDouble(a.getValue() / b.getValue());
+    }
+
+    public static MyDouble power(MyDouble base, MyDouble exponent) {
+        return new MyDouble(Math.pow(base.getValue(), exponent.getValue()));
+    }
+
+    public static void main(String[] args) {
+        MyDouble num1 = new MyDouble(5.0);
+        MyDouble num2 = new MyDouble(2.0);
+
+        MyDouble sum = MyDouble.add(num1, num2);
+        System.out.println(num1.getValue() + " + " + num2.getValue() + " = " + sum.getValue()); // Вывод: 5.0 + 2.0 = 7.0
+
+        MyDouble quotient = MyDouble.divide(num1, num2);
+        System.out.println(num1.getValue() + " / " + num2.getValue() + " = " + quotient.getValue()); // Вывод: 5.0 / 2.0 = 2.5
+
+        MyDouble powerResult = MyDouble.power(num1, num2);
+        System.out.println(num1.getValue() + " ^ " + num2.getValue() + " = " + powerResult.getValue()); // Вывод: 5.0 ^ 2.0 = 25.0
+
+        try {
+            MyDouble divisionByZero = MyDouble.divide(num1, new MyDouble(0));
+        } catch (ArithmeticException e) {
+            System.err.println("Ошибка: " + e.getMessage()); // Вывод: Ошибка: Деление на ноль!
+        }
+
+    }
+}
