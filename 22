@@ -1,0 +1,132 @@
+package org.example;
+
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+
+public class CalendarGenerator {
+
+
+    public static void main(String[] args) {
+        // Создаем объект Scanner для чтения ввода пользователя
+        Scanner scanner = new Scanner(System.in);
+
+
+        // Выводим запрос на ввод даты
+        System.out.println("Введите дату в формате ГГГГ-ММ-ДД (например, 2022-01-01):");
+        String dateString = scanner.nextLine(); // Считываем введенную строку
+
+
+        LocalDate inputDate;
+        try {
+            // Пытаемся преобразовать введенную строку в объект LocalDate
+            inputDate = LocalDate.parse(dateString);
+        } catch (Exception e) {
+            // Если возникла ошибка, выводим сообщение об ошибке и завершаем программу
+            System.out.println("Неверный формат даты. Пожалуйста, введите дату в формате ГГГГ-ММ-ДД.");
+            return;
+        }
+
+
+        // Проверяем, что введенный год равен 2022
+        if (inputDate.getYear() != 2022) {
+            System.out.println("Программа работает только с 2022 годом.");
+            return;
+        }
+
+
+        // Вызываем метод generateSchedule для генерации расписания
+        generateSchedule(inputDate);
+
+
+        // Закрываем Scanner
+        scanner.close();
+    }
+
+
+
+
+    /**
+     * Генерирует расписание рабочих дней на текущий месяц для слесаря механосборочного цеха.
+     *
+     * @param inputDate  Дата, на основе которой генерируется расписание.
+     */
+    public static void generateSchedule(LocalDate inputDate) {
+        // Получаем первый день месяца из введенной даты
+        YearMonth yearMonth = YearMonth.from(inputDate);
+        LocalDate firstDayOfMonth = yearMonth.atDay(1);
+
+
+        // Получаем последний день месяца из введенной даты
+        LocalDate lastDayOfMonth = yearMonth.atEndOfMonth();
+
+
+        // Создаем список для хранения рабочих дат
+        List<LocalDate> workDays = new ArrayList<>();
+
+
+        // Находим первый рабочий день в месяце, отталкиваясь от введенной даты
+        LocalDate currentDay = firstDayOfMonth;
+        while (currentDay.isBefore(inputDate)) {
+            currentDay = currentDay.plusDays(1);
+        }
+
+
+        // Расчет начального дня. Вычисляем смещение от начала месяца
+        int dayDifference = (int) (currentDay.toEpochDay() - firstDayOfMonth.toEpochDay());
+        int shift = dayDifference % 4;
+
+
+        LocalDate startWorkDay = firstDayOfMonth;
+        // Определяем первый рабочий день месяца
+        switch(shift){
+            case 1:
+                startWorkDay = firstDayOfMonth.plusDays(0);
+                break;
+            case 2:
+                startWorkDay = firstDayOfMonth.plusDays(3);
+                break;
+            case 3:
+                startWorkDay = firstDayOfMonth.plusDays(2);
+                break;
+            default:
+                startWorkDay = firstDayOfMonth.plusDays(1);
+
+
+        }
+
+
+
+
+        LocalDate workingDay = startWorkDay;
+
+
+        // Заполняем список рабочих дней, учитывая перенос воскресений
+        while (!workingDay.isAfter(lastDayOfMonth)) {
+            if (workingDay.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                workingDay = workingDay.plusDays(1);  // Переносим смену на понедельник
+            }
+            if(!workingDay.isAfter(lastDayOfMonth)){
+                workDays.add(workingDay);
+                workingDay = workingDay.plusDays(4); //Следующая смена через 4 дня
+            }
+
+
+
+
+        }
+
+
+        // Выводим расписание на консоль
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        System.out.println("Расписание рабочих дней на " + yearMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")) + ":");
+        for (LocalDate day : workDays) {
+            System.out.println(day.format(formatter));
+        }
+    }
+}
