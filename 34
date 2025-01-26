@@ -1,0 +1,48 @@
+package org.example;
+
+import java.sql.*;
+import java.util.*;
+
+public class TwoNameCollections {
+    private static final String URL = "jdbc:mysql://localhost:3306/mydatabase";
+    private static final String USER = "root";
+    private static final String PASSWORD = "root";
+
+    public static void main(String[] args) {
+        List<String> names1 = Arrays.asList("Иван", "Петр", "Сергей");
+        List<String> names2 = Arrays.asList("Анна", "Мария", "Елена");
+
+        // Сохранение в БД
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
+            String createSql = "CREATE TABLE IF NOT EXISTS names("
+                    + "id INT AUTO_INCREMENT PRIMARY KEY, "
+                    + "name VARCHAR(50))";
+            conn.createStatement().execute(createSql);
+            conn.createStatement().execute("TRUNCATE TABLE names");
+
+            String insertSql = "INSERT INTO names(name) VALUES (?)";
+            try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
+                for (String name : names1) {
+                    ps.setString(1, name);
+                    ps.addBatch();
+                }
+                for (String name : names2) {
+                    ps.setString(1, name);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+
+            // Вывод
+            String selectSql = "SELECT name FROM names";
+            try (Statement st = conn.createStatement();
+                 ResultSet rs = st.executeQuery(selectSql)) {
+                while (rs.next()) {
+                    System.out.println(rs.getString("name"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
