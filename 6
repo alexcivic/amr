@@ -1,0 +1,53 @@
+цикл while в MySQL/PostgreSQL
+использовать maven
+писать в 1 файле
+добавить в pom.xml
+
+package org.example;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+public class Task6 {
+
+    // Константы для подключения к базе данных
+    private static final String URL = "jdbc:mysql://localhost:3306/AlphabetDB";
+    private static final String USER = "root"; // Ваш пользователь
+    private static final String PASSWORD = "root"; // Ваш пароль
+
+    public static void main(String[] args) {
+        char letter = 'A'; // Начальная буква алфавита
+
+        // SQL-запрос для вставки данных
+        String insertQuery = "INSERT INTO Alphabet (letter) VALUES (?)";
+
+        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
+            System.out.println("Подключение к базе данных успешно!");
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery)) {
+                while (letter <= 'Z') { // Пока не достигнем конца алфавита
+                    preparedStatement.setString(1, String.valueOf(letter)); // Устанавливаем букву
+                    preparedStatement.executeUpdate(); // Выполняем вставку
+                    System.out.println("Добавлена буква: " + letter); // Логируем добавление
+                    letter++; // Переход к следующей букве
+                }
+            }
+
+            System.out.println("Все буквы алфавита добавлены в базу данных.");
+        } catch (SQLException e) {
+            System.err.println("Ошибка подключения к базе данных: " + e.getMessage());
+        }
+    }
+}
+
+добавить в sql консоль
+CREATE DATABASE AlphabetDB;
+
+ USE AlphabetDB;
+
+ CREATE TABLE Alphabet (
+                       	id INT AUTO_INCREMENT PRIMARY KEY,
+                       	letter CHAR(1) NOT NULL
+ );
