@@ -1,0 +1,127 @@
+import java.util.Scanner;
+
+
+public class Main {
+   public static void main(String[] args) {
+       // Пример использования класса Form
+       System.out.println("Использование класса Form:");
+       Form form = new Form(); // Создаем объект Form
+       form.input(); // Запрашиваем ввод пароля
+       System.out.println("Введенный пароль (из Form): " + form.password()); // Выводим введенный пароль
+       if (form.submit()) { // Отправляем форму
+           System.out.println("Форма Form успешно отправлена.");
+       } else {
+           System.out.println("Ошибка отправки формы Form.");
+       }
+
+
+
+
+       System.out.println();
+
+
+
+
+       // Пример использования класса SmartForm
+       System.out.println("Использование класса SmartForm:");
+       SmartForm smartForm = new SmartForm(); // Создаем объект SmartForm
+       smartForm.input(); // Запрашиваем ввод пароля
+       System.out.println("Введенный пароль (из SmartForm): " + smartForm.password()); // Выводим введенный пароль
+       System.out.println("Сохраненный пароль (из SmartForm): " + smartForm.getSavedPassword()); // Выводим сохраненный пароль
+       if (smartForm.submit()) { // Отправляем форму
+           System.out.println("Форма SmartForm успешно отправлена.");
+       } else {
+           System.out.println("Ошибка отправки формы SmartForm.");
+       }
+
+
+
+
+       System.out.println();
+
+
+
+
+       // Пример использования SmartForm с проверкой пустого пароля
+       System.out.println("Использование класса SmartForm (с пустым паролем):");
+       SmartForm smartForm2 = new SmartForm(); // Создаем еще один объект SmartForm
+       smartForm2.input(); // Запрашиваем ввод пароля (оставим пустым)
+       if (smartForm2.submit()) { // Отправляем форму
+           System.out.println("Форма SmartForm успешно отправлена.");
+       } else {
+           System.out.println("Ошибка отправки формы SmartForm."); // Ожидаем, что эта строка будет выведена
+       }
+   }
+}
+
+
+
+
+// Класс Form - базовый класс для создания и ввода пароля
+class Form {
+   private String password; // Приватное поле для хранения пароля
+
+
+
+
+   // Метод для ввода пароля пользователем
+   public void input() {
+       Scanner scanner = new Scanner(System.in); // Создаем Scanner для чтения ввода
+       System.out.print("Введите пароль: "); // Запрашиваем ввод пароля
+       this.password = scanner.nextLine(); // Считываем введенную строку и сохраняем в поле password
+   }
+
+
+
+
+   // Метод для проверки правильности пароля (в базовом классе не выполняет проверку, просто возвращает true)
+   public boolean submit() {
+       return true; // Возвращаем true, так как проверка не требуется в этом базовом классе
+   }
+
+
+
+
+   // Метод для получения пароля
+   public String password() {
+       return password; // Возвращаем значение поля password
+   }
+}
+
+
+
+
+// Класс SmartForm, наследующий от Form, сохраняет введенный пароль
+class SmartForm extends Form {
+   private String savedPassword; // Приватное поле для хранения сохраненного пароля
+
+
+
+
+   // Переопределяем метод input, чтобы сохранять введенный пароль
+   @Override
+   public void input() {
+       super.input(); // Сначала вызываем метод input из базового класса для ввода пароля
+       this.savedPassword = super.password(); // Сохраняем введенный пароль
+   }
+
+
+
+
+   // Переопределяем метод submit, чтобы проверять правильность пароля (пример проверки)
+   @Override
+   public boolean submit() {
+       // Пример проверки: пароль должен быть не null и не пустым
+       return savedPassword != null && !savedPassword.isEmpty(); // Возвращаем true, если пароль не null и не пустой, иначе false
+   }
+
+
+
+
+   // Метод для получения сохраненного пароля
+   public String getSavedPassword() {
+       return savedPassword; // Возвращаем сохраненный пароль
+   }
+}
+
+
