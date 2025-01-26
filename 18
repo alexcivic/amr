@@ -1,0 +1,141 @@
+package org.example;
+
+
+import java.util.Arrays;
+
+
+public class Binary {
+   private char[] bits;
+   private int length;
+
+
+   public Binary(int length) {
+       this.length = length;
+       this.bits = new char[length];
+       Arrays.fill(this.bits, '0'); // Инициализация нулями
+   }
+
+
+   public Binary(String binaryString) {
+       this.length = binaryString.length();
+       this.bits = binaryString.toCharArray();
+       for (char bit : bits) {
+           if (bit != '0' && bit != '1') {
+               throw new IllegalArgumentException("Строка должна содержать только 0 и 1");
+           }
+       }
+   }
+
+
+   public Binary(int decimalValue, int length) {
+       this(length);
+       fromDecimal(decimalValue);
+   }
+
+
+   public void fromDecimal(int decimalValue) {
+       if (decimalValue >= 0) {
+           for (int i = 0; i < length; i++) {
+               bits[i] = (char) ((decimalValue % 2) + '0');
+               decimalValue /= 2;
+           }
+       } else {
+           int positiveValue = -decimalValue;
+           for (int i = 0; i < length; i++) {
+               bits[i] = (char) ((positiveValue % 2) + '0');
+               positiveValue /= 2;
+           }
+           invert();
+           addOne();
+       }
+   }
+
+
+   private void invert() {
+       for (int i = 0; i < length; i++) {
+           bits[i] = (bits[i] == '0' ? '1' : '0');
+       }
+   }
+
+
+   private void addOne() {
+       int carry = 1;
+       for (int i = 0; i < length; i++) {
+           if (bits[i] == '0' && carry == 1) {
+               bits[i] = '1';
+               carry = 0;
+           } else if (bits[i] == '1' && carry == 1) {
+               bits[i] = '0';
+               carry = 1;
+           }
+           if (carry == 0) break;
+       }
+   }
+
+
+   public int toDecimal() {
+       int decimalValue = 0;
+       if (bits[length-1] == '0') {
+           for (int i = length - 1; i >= 0; i--) {
+               if (bits[i] == '1') {
+                   decimalValue += Math.pow(2, i);
+               }
+           }
+       } else {
+           Binary temp = new Binary(new String(bits)); // Создаем копию
+           temp.invert();
+           temp.addOne();
+           for (int i = length - 1; i >= 0; i--) {
+               if (temp.bits[i] == '1') {
+                   decimalValue += Math.pow(2, i);
+               }
+           }
+           decimalValue = -decimalValue;
+       }
+
+
+       return decimalValue;
+   }
+
+
+   @Override
+   public String toString() {
+       return new String(bits);
+   }
+
+
+   public static void main(String[] args) {
+       Binary positive = new Binary(1, 8); // +1, 8 бит
+       System.out.println("+1 в двоичном: " + positive);
+       System.out.println("+1 в десятичном: " + positive.toDecimal());
+
+
+       Binary negative = new Binary(-1, 8); // -1, 8 бит
+       System.out.println("-1 в двоичном: " + negative);
+       System.out.println("-1 в десятичном: " + negative.toDecimal());
+
+
+       Binary positiveBig = new Binary(127, 8); // +127, 8 бит
+       System.out.println("+127 в двоичном: " + positiveBig);
+       System.out.println("+127 в десятичном: " + positiveBig.toDecimal());
+
+
+       Binary negativeBig = new Binary(-128, 8); // -128, 8 бит
+       System.out.println("-128 в двоичном: " + negativeBig);
+       System.out.println("-128 в десятичном: " + negativeBig.toDecimal());
+
+
+       Binary fromString = new Binary("11111111");
+       System.out.println("Из строки 11111111 в десятичное: " + fromString.toDecimal());
+
+
+       try {
+           new Binary("123");
+       } catch (IllegalArgumentException e) {
+           System.err.println("Ошибка: " + e.getMessage());
+       }
+
+
+   }
+}
+
