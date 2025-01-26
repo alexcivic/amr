@@ -1,0 +1,48 @@
+package org.example;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Scanner;
+
+public class WeekNumber {
+
+    public static void main(String[] args) {
+        // Создаем объект Scanner для считывания ввода с консоли
+        Scanner scanner = new Scanner(System.in);
+
+        // Просим пользователя ввести дату
+        System.out.print("Введите дату в формате ДД.MM.ГГ: ");
+        String inputDate = scanner.nextLine();
+
+        // Вызываем метод для вычисления номера недели
+        String weekNumber = getWeekNumber(inputDate);
+
+        // Выводим результат
+        System.out.println(weekNumber);
+
+        // Закрываем Scanner
+        scanner.close();
+    }
+
+    public static String getWeekNumber(String date) {
+        try {
+            // Формат для парсинга даты
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yy");
+            Date parsedDate = dateFormat.parse(date);
+
+            // Используем календарь для получения номера недели
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(parsedDate);
+
+            // Получаем номер недели в году
+            int weekNumber = calendar.get(Calendar.WEEK_OF_YEAR);
+
+            // Возвращаем номер недели
+            return "Неделя " + weekNumber;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Неверный формат даты";
+        }
+    }
+}
