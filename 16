@@ -1,0 +1,114 @@
+package org.example;
+
+
+import java.util.Scanner;
+
+
+interface Progress {
+   double getNthElement(int n);
+   double getSumOfNElements(int n);
+}
+
+
+class ArithmeticProgression implements Progress {
+   private double firstElement;
+   private double difference;
+
+
+   public ArithmeticProgression(double firstElement, double difference) {
+       this.firstElement = firstElement;
+       this.difference = difference;
+   }
+
+
+   @Override
+   public double getNthElement(int n) {
+       return firstElement + (n - 1) * difference;
+   }
+
+
+   @Override
+   public double getSumOfNElements(int n) {
+       return (n * (2 * firstElement + (n - 1) * difference)) / 2;
+   }
+}
+
+
+class GeometricProgression implements Progress {
+   private double firstElement;
+   private double ratio;
+
+
+   public GeometricProgression(double firstElement, double ratio) {
+       this.firstElement = firstElement;
+       this.ratio = ratio;
+   }
+
+
+   @Override
+   public double getNthElement(int n) {
+       return firstElement * Math.pow(ratio, n - 1);
+   }
+
+
+   @Override
+   public double getSumOfNElements(int n) {
+       if (ratio == 1) {
+           return firstElement * n; // Избегаем деления на ноль
+       }
+       return (firstElement * (1 - Math.pow(ratio, n))) / (1 - ratio);
+   }
+}
+
+
+public class Task16 {
+   public static void main(String[] args) {
+       Scanner scanner = new Scanner(System.in);
+
+
+       System.out.println("Выберите тип прогрессии:");
+       System.out.println("1. Арифметическая");
+       System.out.println("2. Геометрическая");
+
+
+       int choice = scanner.nextInt();
+
+
+       if (choice == 1) {
+           System.out.print("Введите первый элемент: ");
+           double firstElement = scanner.nextDouble();
+           System.out.print("Введите разность: ");
+           double difference = scanner.nextDouble();
+
+
+           ArithmeticProgression ap = new ArithmeticProgression(firstElement, difference);
+
+
+           System.out.print("Введите номер элемента для вычисления: ");
+           int n = scanner.nextInt();
+           System.out.println(n + "-й элемент: " + ap.getNthElement(n));
+           System.out.println("Сумма " + n + " элементов: " + ap.getSumOfNElements(n));
+
+
+       } else if (choice == 2) {
+           System.out.print("Введите первый элемент: ");
+           double firstElement = scanner.nextDouble();
+           System.out.print("Введите знаменатель: ");
+           double ratio = scanner.nextDouble();
+
+
+           GeometricProgression gp = new GeometricProgression(firstElement, ratio);
+
+
+           System.out.print("Введите номер элемента для вычисления: ");
+           int n = scanner.nextInt();
+           System.out.println(n + "-й элемент: " + gp.getNthElement(n));
+           System.out.println("Сумма " + n + " элементов: " + gp.getSumOfNElements(n));
+       } else {
+           System.out.println("Некорректный выбор.");
+       }
+
+
+       scanner.close();
+   }
+}
