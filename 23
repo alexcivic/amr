@@ -1,0 +1,120 @@
+import java.util.Arrays;
+
+
+public class ComplexNumber {
+   private int[] parts; // Массив для хранения вещественной и мнимой частей
+
+
+   // Конструктор для создания комплексного числа из массива
+   public ComplexNumber(int[] parts) {
+       if (parts == null || parts.length != 2) {
+           throw new IllegalArgumentException("Комплексное число должно иметь 2 части: вещественную и мнимую.");
+       }
+       this.parts = Arrays.copyOf(parts, 2); // Копируем массив, чтобы избежать изменений извне
+   }
+
+
+   // Конструктор для создания комплексного числа из двух отдельных целых чисел
+   public ComplexNumber(int realPart, int imaginaryPart) {
+       this.parts = new int[]{realPart, imaginaryPart};
+   }
+
+
+   // Метод для получения вещественной части
+   public int getRealPart() {
+       return parts[0];
+   }
+
+
+   // Метод для получения мнимой части
+   public int getImaginaryPart() {
+       return parts[1];
+   }
+
+
+   // Метод для установки вещественной части
+   public void setRealPart(int realPart) {
+       this.parts[0] = realPart;
+   }
+
+
+   // Метод для установки мнимой части
+   public void setImaginaryPart(int imaginaryPart) {
+       this.parts[1] = imaginaryPart;
+   }
+
+
+   // Метод для сложения двух комплексных чисел
+   public ComplexNumber add(ComplexNumber other) {
+       int newRealPart = this.parts[0] + other.parts[0];
+       int newImaginaryPart = this.parts[1] + other.parts[1];
+       return new ComplexNumber(newRealPart, newImaginaryPart);
+   }
+
+
+   // Метод для вычитания двух комплексных чисел
+   public ComplexNumber subtract(ComplexNumber other) {
+       int newRealPart = this.parts[0] - other.parts[0];
+       int newImaginaryPart = this.parts[1] - other.parts[1];
+       return new ComplexNumber(newRealPart, newImaginaryPart);
+   }
+
+
+   // Метод для умножения двух комплексных чисел
+   public ComplexNumber multiply(ComplexNumber other) {
+       int newRealPart = (this.parts[0] * other.parts[0]) - (this.parts[1] * other.parts[1]);
+       int newImaginaryPart = (this.parts[0] * other.parts[1]) + (this.parts[1] * other.parts[0]);
+       return new ComplexNumber(newRealPart, newImaginaryPart);
+   }
+
+
+   // Метод для представления комплексного числа в виде строки
+   @Override
+   public String toString() {
+       if(parts[1] >= 0){
+           return parts[0] + " + " + parts[1] + "i";
+       } else{
+           return parts[0] + " - " + Math.abs(parts[1]) + "i";
+       }
+
+
+   }
+
+
+   public static void main(String[] args) {
+       // Пример использования класса ComplexNumber
+       ComplexNumber num1 = new ComplexNumber(3, 2); // 3 + 2i
+       ComplexNumber num2 = new ComplexNumber(1, -4); // 1 - 4i
+
+
+       System.out.println("Число 1: " + num1);
+       System.out.println("Число 2: " + num2);
+
+
+       ComplexNumber sum = num1.add(num2);
+       System.out.println("Сумма: " + sum); // 4 - 2i
+
+
+       ComplexNumber difference = num1.subtract(num2);
+       System.out.println("Разность: " + difference); // 2 + 6i
+
+
+       ComplexNumber product = num1.multiply(num2);
+       System.out.println("Произведение: " + product); // 11 -10i
+
+
+       // Пример использования конструктора с массивом
+       int[] parts = {5, 6};
+       ComplexNumber num3 = new ComplexNumber(parts);
+       System.out.println("Число 3: " + num3); // 5 + 6i
+
+
+       // Пример использования геттеров и сеттеров
+       num3.setRealPart(10);
+       num3.setImaginaryPart(12);
+       System.out.println("Число 3 (после изменения): " + num3);  // 10 + 12i
+       System.out.println("Вещественная часть числа 3: " + num3.getRealPart()); // 10
+       System.out.println("Мнимая часть числа 3: " + num3.getImaginaryPart()); // 12
+   }
+}
+
