@@ -3,6 +3,15 @@
 писать в 1 файле
 добавить в pom.xml
 
+CREATE DATABASE WordDB;
+
+ USE WordDB;
+
+ CREATE TABLE Words (
+                    	id INT AUTO_INCREMENT PRIMARY KEY,
+                    	word VARCHAR(255) NOT NULL
+ );
+ 
 package org.example;
 
 import java.sql.Connection;
