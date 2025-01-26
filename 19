@@ -1,0 +1,110 @@
+package org.example;
+
+
+import java.util.Arrays;
+import java.util.Random;
+
+
+public class Matrix {
+
+
+   private final int rows;
+   private final int cols;
+   private final double[][] data;
+
+
+   public Matrix(int rows, int cols) {
+       if (rows <= 0 || cols <= 0) {
+           throw new IllegalArgumentException("Размеры матрицы должны быть положительными.");
+       }
+       this.rows = rows;
+       this.cols = cols;
+       this.data = new double[rows][cols];
+   }
+
+
+   public static Matrix zero(int rows, int cols) {
+       return new Matrix(rows, cols); // Конструктор уже инициализирует нулями
+   }
+
+
+   public static Matrix random(int rows, int cols) {
+       Matrix matrix = new Matrix(rows, cols);
+       Random random = new Random();
+       for (int i = 0; i < rows; i++) {
+           for (int j = 0; j < cols; j++) {
+               matrix.data[i][j] = random.nextDouble(); // Случайное число от 0.0 до 1.0
+           }
+       }
+       return matrix;
+   }
+
+
+   public Matrix add(Matrix other) {
+       if (other == null) {
+           throw new IllegalArgumentException("Складываемая матрица не может быть null.");
+       }
+       if (this.rows != other.rows || this.cols != other.cols) {
+           throw new IllegalArgumentException("Матрицы должны иметь одинаковые размеры для сложения.");
+       }
+
+
+       Matrix result = new Matrix(rows, cols);
+       for (int i = 0; i < rows; i++) {
+           for (int j = 0; j < cols; j++) {
+               result.data[i][j] = this.data[i][j] + other.data[i][j];
+           }
+       }
+       return result;
+   }
+
+
+   @Override
+   public String toString() {
+       StringBuilder sb = new StringBuilder();
+       for (int i = 0; i < rows; i++) {
+           sb.append(Arrays.toString(data[i])).append("\n");
+       }
+       return sb.toString();
+   }
+
+
+   public static void main(String[] args) {
+       Matrix zeroMatrix = Matrix.zero(3, 4);
+       System.out.println("Нулевая матрица:\n" + zeroMatrix);
+
+
+       Matrix randomMatrix = Matrix.random(2, 3);
+       System.out.println("Случайная матрица:\n" + randomMatrix);
+
+
+       Matrix matrix1 = new Matrix(2, 2);
+       matrix1.data[0][0] = 1;
+       matrix1.data[0][1] = 2;
+       matrix1.data[1][0] = 3;
+       matrix1.data[1][1] = 4;
+
+
+       Matrix matrix2 = new Matrix(2, 2);
+       matrix2.data[0][0] = 5;
+       matrix2.data[0][1] = 6;
+       matrix2.data[1][0] = 7;
+       matrix2.data[1][1] = 8;
+
+
+       try {
+           Matrix sumMatrix = matrix1.add(matrix2);
+           System.out.println("Сумма матриц:\n" + sumMatrix);
+
+
+           //Примеры некорректного ввода
+           //Matrix matrix3 = new Matrix(2,3);
+           //Matrix sumMatrixError = matrix1.add(matrix3); //выбросит исключение, матрицы разного размера
+           //Matrix sumMatrixNull = matrix1.add(null); //выбросит исключение, складываемая матрица null
+
+
+       } catch (IllegalArgumentException e) {
+           System.err.println("Ошибка: " + e.getMessage());
+       }
+   }
+}
