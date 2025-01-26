@@ -1,0 +1,88 @@
+package org.example;
+
+
+public class Main {
+   public static void main(String[] args) {
+       // Создание объекта Worker 'Иван'
+       Worker ivan = new Worker();
+       ivan.setName("Иван"); // Устанавливаем имя Ивана
+       ivan.setAge(25);     // Устанавливаем возраст Ивана
+       ivan.setSalary(1000); // Устанавливаем зарплату Ивана
+       // Создание объекта Worker 'Вася'
+       Worker vasya = new Worker();
+       vasya.setName("Вася");   // Устанавливаем имя Васи
+       vasya.setAge(26);       // Устанавливаем возраст Васи
+       vasya.setSalary(2000); // Устанавливаем зарплату Васи
+       // Нахождение суммы зарплат
+       int totalSalary = ivan.getSalary() + vasya.getSalary();
+       System.out.println("Сумма зарплат Ивана и Васи: " + totalSalary); // Выводим сумму зарплат
+       // Создание объекта Student
+       Student student = new Student();
+       student.setName("Петя"); // Устанавливаем имя студента
+       student.setAge(20);     // Устанавливаем возраст студента
+       student.setScholarship(500); // Устанавливаем стипендию студента
+       student.setCourse(2);       // Устанавливаем курс студента
+       System.out.println("Имя студента: " + student.getName());  // Выводим имя студента
+       System.out.println("Возраст студента: " + student.getAge());   // Выводим возраст студента
+       System.out.println("Стипендия студента: " + student.getScholarship()); // Выводим стипендию студента
+       System.out.println("Курс студента: " + student.getCourse());     // Выводим курс студента
+   }
+}
+// Класс Worker, наследующий от User
+class Worker extends User {
+   private int salary; // Приватное поле для зарплаты
+   // Метод для получения зарплаты
+   public int getSalary() {
+       return salary;
+   }
+   // Метод для установки зарплаты
+   public void setSalary(int salary) {
+       this.salary = salary;
+   }
+}
+// Класс User
+class User {
+   protected String name; // Защищенное поле для имени
+   protected int age;    // Защищенное поле для возраста
+   // Метод для получения имени
+   public String getName() {
+       return name;
+   }
+   // Метод для установки имени
+   public void setName(String name) {
+       this.name = name;
+   }
+   // Метод для получения возраста
+   public int getAge() {
+       return age;
+   }
+   // Метод для установки возраста
+   public void setAge(int age) {
+       this.age = age;
+   }
+}
+// Класс Student, наследующий от User
+class Student extends User {
+   private int scholarship; // Приватное поле для стипендии
+   private int course;     // Приватное поле для курса
+
+
+
+
+   // Метод для получения стипендии
+   public int getScholarship() {
+       return scholarship;
+   }
+   // Метод для установки стипендии
+   public void setScholarship(int scholarship) {
+       this.scholarship = scholarship;
+   }
+   // Метод для получения курса
+   public int getCourse() {
+       return course;
+   }
+   // Метод для установки курса
+   public void setCourse(int course) {
+       this.course = course;
+   }
+}
