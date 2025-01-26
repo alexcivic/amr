@@ -1,0 +1,88 @@
+package org.example;
+
+import java.util.Random;
+
+
+public class Neuron {
+    private double[] weights; // Веса нейрона (синаптические веса)
+    private double bias; // Смещение нейрона
+
+    public Neuron(int numInputs) {
+        this.weights = new double[numInputs]; // Инициализация массива весов заданным размером
+        this.bias = new Random().nextDouble() - 0.5; // Инициализация смещения случайным значением от -0.5 до 0.5
+        // Инициализируем веса случайными значениями от -0.5 до 0.5
+        Random random = new Random(); // Создание объекта Random для генерации случайных чисел
+        for (int i = 0; i < numInputs; i++) {
+            this.weights[i] = random.nextDouble() - 0.5; // Заполнение массива весов случайными числами от -0.5 до 0.5
+        }
+    }
+
+
+    public double calculateOutput(double[] inputs) {
+        if (inputs.length != weights.length) {
+            throw new IllegalArgumentException("Количество входных данных не совпадает с количеством весов.");
+        }
+
+
+        double weightedSum = 0; // Инициализация взвешенной суммы
+        for (int i = 0; i < inputs.length; i++) {
+            weightedSum += inputs[i] * weights[i]; // Суммируем взвешенные входы (умножаем вход на соответствующий вес)
+        }
+        weightedSum += bias; // Добавляем смещение к взвешенной сумме
+        return sigmoid(weightedSum); // Применяем сигмоидную функцию активации и возвращаем результат
+    }
+    
+    private double sigmoid(double x) {
+        return 1 / (1 + Math.exp(-x)); // Реализация сигмоидной функции
+    }
+
+    // Геттеры для весов и смещения (для возможности доступа снаружи, например, для обучения)
+    public double[] getWeights() {
+        return weights; // Возвращает массив весов
+    }
+    
+    public double getBias() {
+        return bias; // Возвращает смещение
+    }
+}
+
+// Класс для нейронной сети
+class NeuralNetwork {
+    private Neuron neuron1; // Первый нейрон скрытого слоя
+    private Neuron neuron2; // Второй нейрон скрытого слоя
+    private Neuron outputNeuron; // Выходной нейрон
+
+    public NeuralNetwork() {
+        // Два нейрона в скрытом слое, каждый с двумя входами
+        neuron1 = new Neuron(2); // Создание первого нейрона скрытого слоя с двумя входами
+        neuron2 = new Neuron(2); // Создание второго нейрона скрытого слоя с двумя входами
+        // Выходной нейрон с двумя входами от скрытых нейронов
+        outputNeuron = new Neuron(2); // Создание выходного нейрона с двумя входами
+    }
+    
+    public double forwardPropagation(double[] inputs) {
+        // Выход первого нейрона скрытого слоя
+        double output1 = neuron1.calculateOutput(inputs); // Вычисление выхода первого нейрона скрытого слоя
+        // Выход второго нейрона скрытого слоя
+        double output2 = neuron2.calculateOutput(inputs); // Вычисление выхода второго нейрона скрытого слоя
+
+
+        // Выходной нейрон принимает выходы скрытых нейронов
+        double[] hiddenOutputs = {output1, output2}; // Создание массива с выходами скрытых нейронов
+        return outputNeuron.calculateOutput(hiddenOutputs); // Вычисление выхода сети и возврат результата
+    }
+
+
+    public static void main(String[] args) {
+        NeuralNetwork network = new NeuralNetwork(); // Создание экземпляра нейронной сети
+
+
+        double[] inputData = {0.5, 0.8}; // Пример входных данных
+
+
+        double output = network.forwardPropagation(inputData); // Вычисление выхода сети
+
+
+        System.out.println("Выход нейронной сети: " + output); // Вывод результата в консоль
+    }
+}
