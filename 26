@@ -1,0 +1,117 @@
+public class Main {
+   public static void main(String[] args) {
+       // Пример использования
+       // Создаем объект CMYKConverter с заданными значениями CMYK
+       CMYKConverter cmykColor = new CMYKConverter(0.2, 0.5, 0.1, 0.3);
+       System.out.println("CMYK: " + cmykColor.cmykToString()); // Выводим значения CMYK
+       System.out.println("RGB: " + cmykColor.rgbToString());   // Выводим сконвертированные значения RGB
+
+
+       // Создаем объект RGBConverter с заданными значениями RGB
+       RGBConverter rgbColor = new RGBConverter(200,150, 100);
+       System.out.println("RGB: " + rgbColor.rgbToString()); // Выводим значения RGB
+   }
+}
+// Базовый класс для цветовой модели
+class ColorModel {
+   // Можно добавить общие методы или поля, если нужно
+   // (например, метод для получения названия цветовой модели)
+}
+
+
+// Класс для конвертации CMYK в RGB
+class CMYKConverter extends RGBConverter {
+
+
+   private double cyan;    // Голубой цвет (0.0 - 1.0)
+   private double magenta; // Пурпурный цвет (0.0 - 1.0)
+   private double yellow;  // Желтый цвет (0.0 - 1.0)
+   private double black;   // Черный цвет (0.0 - 1.0)
+
+
+   // Конструктор класса CMYKConverter
+   public CMYKConverter(double cyan, double magenta, double yellow, double black) {
+       super(0, 0, 0); // Вызываем конструктор родительского класса RGBConverter и инициализируем RGB нулями. Они будут рассчитаны в convertCmykToRgb()
+       this.cyan = cyan;
+       this.magenta = magenta;
+       this.yellow = yellow;
+       this.black = black;
+
+
+       convertCmykToRgb(); // Вызываем метод конвертации CMYK в RGB для установки RGB значений
+   }
+
+
+   // Метод для получения значений CMYK в строковом виде
+   public String cmykToString(){
+       return "C: " + cyan + ", M: " + magenta + ", Y: " + yellow + ", K: " + black;
+   }
+
+
+   // Геттеры для значений CMYK
+   public double getCyan(){
+       return cyan;
+   }
+   public double getMagenta() {
+       return magenta;
+   }
+   public double getYellow() {
+       return yellow;
+   }
+   public double getBlack() {
+       return black;
+   }
+
+
+   // Метод для конвертации CMYK в RGB
+   private void convertCmykToRgb() {
+       // Вычисление значений R, G, B по формулам
+       red = (int) (255 * (1 - cyan) * (1 - black));
+       green = (int) (255 * (1 - magenta) * (1 - black));
+       blue = (int) (255 * (1 - yellow) * (1 - black));
+
+
+       // Проверка, чтобы RGB значения не выходили за допустимый диапазон 0-255
+       red = Math.max(0, Math.min(255, red));
+       green = Math.max(0, Math.min(255, green));
+       blue = Math.max(0, Math.min(255, blue));
+   }
+}
+
+
+
+
+// Класс для конвертации RGB в другие модели (и обратно)
+class RGBConverter extends ColorModel {
+
+
+   // Метод для получения RGB в виде массива int
+   public int[] getRgb() {
+       return new int[]{red, green, blue};
+   }
+   // Добавляем поля RGB
+   protected int red;   // Красный цвет (0-255)
+   protected int green; // Зеленый цвет (0-255)
+   protected int blue;  // Синий цвет (0-255)
+
+
+   // Конструктор класса RGBConverter
+   public RGBConverter (int red, int green, int blue) {
+       this.red = red;
+       this.green = green;
+       this.blue = blue;
+   }
+   // Метод для получения значений RGB в строковом виде
+   public String rgbToString() {
+       return "R: " + red + ", G: " + green + ", B: " + blue;
+   }
+
+
+   // Методы для получения (геттеры) и изменения (сеттеры) значений RGB
+   public int getRed() { return red; }
+   public void setRed(int red) { this.red = red; }
+   public int getGreen() { return green; }
+   public void setGreen(int green) { this.green = green; }
+   public int getBlue() { return blue; }
+   public void setBlue(int blue) { this.blue = blue; }
+}
