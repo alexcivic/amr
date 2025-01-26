@@ -1,0 +1,88 @@
+package org.example;
+
+
+import java.util.Arrays;
+
+
+
+
+interface InArray {
+    // Метод для сложения двух массивов
+    int[] addArrays(int[] array1, int[] array2);
+}
+
+
+
+
+class ArraySum implements InArray {
+
+
+    @Override
+    public int[] addArrays(int[] array1, int[] array2) {
+        // Используем минимальную длину из двух массивов
+        int length = Math.min(array1.length, array2.length);
+        int[] result = new int[length];
+
+
+        for (int i = 0; i < length; i++) {
+            result[i] = array1[i] + array2[i];
+        }
+
+
+        return result;
+    }
+}
+
+
+class OrArray implements InArray {
+
+
+    @Override
+    public int[] addArrays(int[] array1, int[] array2) {
+        // Используем минимальную длину из двух массивов
+        int length = Math.min(array1.length, array2.length);
+        int[] result = new int[length];
+
+
+        for (int i = 0; i < length; i++) {
+            result[i] = array1[i] | array2[i]; // Логическое ИЛИ
+        }
+
+
+        return result;
+    }
+}
+
+
+
+
+public class Task17 {
+    public static void main(String[] args) {
+        // Пример массивов для тестирования
+        int[] array1 = {1, 3, 5, 7};
+        int[] array2 = {4, 6, 7, 7};
+
+
+        // Тестирование ArraySum
+        InArray arraySum = new ArraySum();
+        int[] sumResult = arraySum.addArrays(array1, array2);
+        System.out.println("Результат сложения массивов (ArraySum):");
+        printArray(sumResult);
+
+
+        // Тестирование OrArray
+        InArray orArray = new OrArray();
+        int[] orResult = orArray.addArrays(array1, array2);
+        System.out.println("Результат логического ИЛИ массивов (OrArray):");
+        printArray(orResult);
+    }
+
+
+    // Метод для печати массива
+    public static void printArray(int[] array) {
+        for (int i : array) {
+            System.out.print(i + " ");
+        }
+        System.out.println();
+    }
+}
