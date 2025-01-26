@@ -1,0 +1,102 @@
+import java.util.HashMap;
+ import java.util.Map;
+ import java.util.Scanner;
+
+ public class Task4 {
+
+ 	private static final Map<String, Integer> wordsToNumbers = new HashMap<>();
+ 	private static final Map<Integer, String> numbersToWords = new HashMap<>();
+
+ 	static {
+     	// Маппинг слов на числа
+     	wordsToNumbers.put("ноль", 0);
+     	wordsToNumbers.put("один", 1);
+     	wordsToNumbers.put("два", 2);
+     	wordsToNumbers.put("три", 3);
+     	wordsToNumbers.put("четыре", 4);
+     	wordsToNumbers.put("пять", 5);
+     	wordsToNumbers.put("шесть", 6);
+     	wordsToNumbers.put("семь", 7);
+     	wordsToNumbers.put("восемь", 8);
+     	wordsToNumbers.put("девять", 9);
+
+     	// Заполнение маппинга для чисел от 0 до 81
+     	for (int i = 0; i <= 81; i++) {
+         	numbersToWords.put(i, numberToWords(i));
+     	}
+ 	}
+
+ 	// Метод для преобразования числа в текстовое представление
+ 	private static String numberToWords(int number) {
+     	if (number < 0 || number > 81) {
+         	throw new IllegalArgumentException("Число должно быть в диапазоне от 0 до 81.");
+     	}
+
+     	String[] units = {"ноль", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"};
+     	String[] tens = {"", "десять", "двадцать", "тридцать", "сорок", "пятьдесят", "шестьдесят", "семьдесят", "восемьдесят"};
+
+     	if (number < 10) {
+         	return units[number];
+     	} else if (number < 20) {
+         	String[] teens = {"десять", "одиннадцать", "двенадцать", "тринадцать", "четырнадцать", "пятнадцать", "шестнадцать", "семнадцать", "восемнадцать", "девятнадцать"};
+         	return teens[number - 10];
+     	} else {
+         	int tensPart = number / 10;
+         	int unitsPart = number % 10;
+         	return tens[tensPart] + (unitsPart == 0 ? "" : " " + units[unitsPart]);
+     	}
+ 	}
+
+     public static String calculate(String input) {
+     	String[] parts = input.split(" ");
+     	if (parts.length != 3) {
+         	throw new IllegalArgumentException("Неверный формат ввода. Ожидается формат: '<число> <операция> <число>'");
+     	}
+
+     	// Парсим входные данные
+     	Integer num1 = wordsToNumbers.get(parts[0].toLowerCase());
+     	Integer num2 = wordsToNumbers.get(parts[2].toLowerCase());
+     	String operation = parts[1].toLowerCase();
+
+     	if (num1 == null || num2 == null) {
+         	throw new IllegalArgumentException("Числа должны быть от 'ноль' до 'девять'.");
+     	}
+
+     	// Выполняем операцию
+     	int result;
+     	switch (operation) {
+         	case "плюс":
+             	result = num1 + num2;
+             	break;
+         	case "минус":
+             	result = num1 - num2;
+             	break;
+         	case "умножить":
+             	result = num1 * num2;
+             	break;
+         	default:
+             	throw new IllegalArgumentException("Поддерживаются только операции: 'плюс', 'минус', 'умножить'.");
+     	}
+
+     	// Проверяем результат и возвращаем его текстовое представление
+     	if (!numbersToWords.containsKey(result)) {
+         	throw new IllegalArgumentException("Результат выходит за пределы допустимого диапазона (0-81).");
+     	}
+
+     	return numbersToWords.get(result);
+ 	}
+
+ 	public static void main(String[] args) {
+     	Scanner scanner = new Scanner(System.in);
+     	System.out.println("Введите выражение в формате '<число> <операция> <число>':");
+
+     	String input = scanner.nextLine(); // Чтение строки с клавиатуры
+
+     	try {
+         	String result = calculate(input);
+         	System.out.println("Результат: " + result);
+     	} catch (IllegalArgumentException e) {
+         	System.err.println("Ошибка: " + e.getMessage());
+     	}
+ 	}
+ }
