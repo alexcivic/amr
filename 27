@@ -1,0 +1,37 @@
+import java.util.Scanner;
+
+public class NumberConverter {
+    public static String toBinary(int n) {
+        return Integer.toBinaryString(n);
+    }
+
+    public static String toOctal(int n) {
+        return Integer.toOctalString(n);
+    }
+
+    public static String toHex(int n) {
+        return Integer.toHexString(n);
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Введите число: ");
+        int num = sc.nextInt();
+        System.out.print("В какой формат конвертировать? (2/8/16): ");
+        int base = sc.nextInt();
+
+        switch (base) {
+            case 2:
+                System.out.println("Бинарный: " + toBinary(num));
+                break;
+            case 8:
+                System.out.println("Восьмеричный: " + toOctal(num));
+                break;
+            case 16:
+                System.out.println("Шестнадцатеричный: " + toHex(num));
+                break;
+            default:
+                System.out.println("Неподдерживаемый формат!");
+        }
+    }
+}
