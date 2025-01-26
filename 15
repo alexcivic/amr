@@ -1,0 +1,96 @@
+package org.example;
+
+
+import java.util.Scanner;
+
+
+// Абстрактный класс Function
+abstract class Function {
+    // Абстрактный метод для вычисления значения функции в точке x
+    public abstract double calculate(double x);
+
+
+    // Метод для получения типа функции (для удобства вывода)
+    public abstract String getType();
+}
+
+
+// Класс Line (прямая)
+class Line extends Function {
+    private double k; // Коэффициент наклона
+    private double b; // Свободный член
+
+
+    public Line(double k, double b) {
+        this.k = k;
+        this.b = b;
+    }
+
+
+    @Override
+    public double calculate(double x) {
+        return k * x + b;
+    }
+
+
+    @Override
+    public String getType() {
+        return "Прямая";
+    }
+}
+
+
+// Класс Parabola (парабола)
+class Parabola extends Function {
+    private double a;
+    private double b;
+    private double c;
+
+
+    public Parabola(double a, double b, double c) {
+        this.a = a;
+        this.b = b;
+        this.c = c;
+    }
+
+
+    @Override
+    public double calculate(double x) {
+        return a * x * x + b * x + c;
+    }
+
+
+    @Override
+    public String getType() {
+        return "Парабола";
+    }
+}
+
+
+public class Task15 {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+
+        try {
+            // Создание объектов функций
+            Line line = new Line(2, 3); // y = 2x + 3
+            Parabola parabola = new Parabola(1, -4, 4); // y = x^2 - 4x + 4
+
+
+            System.out.print("Введите значение x: ");
+            double x = Double.parseDouble(scanner.nextLine().replace(",", ".")); // Обработка запятой как разделителя
+
+
+            // Вычисление и вывод результатов
+            System.out.println("Значение " + line.getType() + " в точке x = " + x + ": " + line.calculate(x));
+            System.out.println("Значение " + parabola.getType() + " в точке x = " + x + ": " + parabola.calculate(x));
+
+
+        } catch (NumberFormatException e) {
+            System.err.println("Некорректный ввод. Введите число.");
+        } finally {
+            scanner.close();
+        }
+    }
+}
