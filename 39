@@ -1,0 +1,57 @@
+package org.example;
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class GCDExample {
+    private static final String URL = "jdbc:mysql://localhost:3306/mydatabase";
+    private static final String USER = "root";
+    private static final String PASSWORD = "root";
+
+    public static int gcdRecursive(int a, int b) {
+        if (b == 0) return a;
+        return gcdRecursive(b, a % b);
+    }
+
+    public static int gcdNonRecursive(int a, int b) {
+        while (b != 0) {
+            int t = a % b;
+            a = b;
+            b = t;
+        }
+        return a;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Введите a: ");
+        int a = sc.nextInt();
+        System.out.print("Введите b: ");
+        int b = sc.nextInt();
+
+        int gcdR = gcdRecursive(a, b);
+        int gcdNR = gcdNonRecursive(a, b);
+
+        System.out.println("НОД (рекурсия): " + gcdR);
+        System.out.println("НОД (без рекурсии): " + gcdNR);
+
+        // Сохранение в БД
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
+            String createSql = "CREATE TABLE IF NOT EXISTS gcd_results("
+                    + "id INT AUTO_INCREMENT PRIMARY KEY,"
+                    + "a INT, b INT, gcd_recursive INT, gcd_nonrecursive INT)";
+            conn.createStatement().execute(createSql);
+
+            String insertSql = "INSERT INTO gcd_results(a,b,gcd_recursive,gcd_nonrecursive) VALUES(?,?,?,?)";
+            try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
+                ps.setInt(1, a);
+                ps.setInt(2, b);
+                ps.setInt(3, gcdR);
+                ps.setInt(4, gcdNR);
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
