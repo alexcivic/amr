@@ -1,0 +1,263 @@
+ 	
+Создайте новый проект Spring Boot с помощью Spring Initializr (https://start.spring.io/). Выберите следующие зависимости:
+•	Spring Web
+•	Spring Data JPA
+•	PostgreSQL Driver
+•	Thymeleaf
+Шаг 2: Настройка базы данных
+Настройте подключение к базе данных PostgreSQL в файле application.properties.
+application.properties:
+spring.datasource.url=jdbc:postgresql://localhost:5432/yourdatabase
+spring.datasource.username=yourusername
+spring.datasource.password=yourpassword
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+Шаг 3: Создание модели данных
+Создайте класс User для представления данных пользователя.
+User.java:
+package com.example.myuser.model;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String firstName;
+    private String lastName;
+    private int age;
+    private String groupNumber;
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public String getGroupNumber() {
+        return groupNumber;
+    }
+
+    public void setGroupNumber(String groupNumber) {
+        this.groupNumber = groupNumber;
+    }
+}
+Шаг 4: Создание репозитория для доступа к данным
+Создайте интерфейс UserRepository для доступа к данным.
+UserRepository.java:
+package com.example.myuser.repository;
+
+import com.example.myuser.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+}
+Шаг 5: Создание сервиса для бизнес-логики
+Создайте класс UserService для бизнес-логики.
+UserService.java:
+package com.example.myuser.service;
+
+import com.example.myuser.model.User;
+import com.example.myuser.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class UserService {
+    @Autowired
+    private UserRepository userRepository;
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    public Optional<User> getUserById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
+
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
+    }
+}
+Шаг 6: Создание контроллера для обработки HTTP-запросов
+Создайте класс UserController для обработки HTTP-запросов.
+UserController.java:
+package com.example.myuser.controller;
+
+import com.example.myuser.model.User;
+import com.example.myuser.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@Controller
+@RequestMapping("/users")
+public class UserController {
+    @Autowired
+    private UserService userService;
+
+    @GetMapping
+    public String getAllUsers(Model model) {
+        List<User> users = userService.getAllUsers();
+        model.addAttribute("users", users);
+        return "users";
+    }
+
+    @GetMapping("/add")
+    public String addUserForm(Model model) {
+        model.addAttribute("user", new User());
+        return "addUser";
+    }
+
+    @PostMapping("/add")
+    public String addUser(@ModelAttribute User user) {
+        userService.saveUser(user);
+        return "redirect:/users";
+    }
+
+    @GetMapping("/edit/{id}")
+    public String editUserForm(@PathVariable Long id, Model model) {
+        User user = userService.getUserById(id).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
+        model.addAttribute("user", user);
+        return "editUser";
+    }
+
+    @PostMapping("/edit/{id}")
+    public String editUser(@PathVariable Long id, @ModelAttribute User user) {
+        userService.saveUser(user);
+        return "redirect:/users";
+    }
+
+    @GetMapping("/delete/{id}")
+    public String deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return "redirect:/users";
+    }
+}
+Шаг 7: Создание веб-интерфейса
+Создайте HTML-шаблоны для отображения данных пользователей и форм для добавления/редактирования пользователей.
+users.html:
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Users</title>
+</head>
+<body>
+    <h1>Users</h1>
+    <a href="/users/add">Add User</a>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Age</th>
+            <th>Group Number</th>
+            <th>Actions</th>
+        </tr>
+        <tr th:each="user : ${users}">
+            <td th:text="${user.id}"></td>
+            <td th:text="${user.firstName}"></td>
+            <td th:text="${user.lastName}"></td>
+            <td th:text="${user.age}"></td>
+            <td th:text="${user.groupNumber}"></td>
+            <td>
+                <a th:href="@{/users/edit/{id}(id=${user.id})}">Edit</a>
+                <a th:href="@{/users/delete/{id}(id=${user.id})}">Delete</a>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+addUser.html:
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Add User</title>
+</head>
+<body>
+    <h1>Add User</h1>
+    <form th:action="@{/users/add}" th:object="${user}" method="post">
+        <label>First Name:</label>
+        <input type="text" th:field="*{firstName}" />
+        <br/>
+        <label>Last Name:</label>
+        <input type="text" th:field="*{lastName}" />
+        <br/>
+        <label>Age:</label>
+        <input type="number" th:field="*{age}" />
+        <br/>
+        <label>Group Number:</label>
+        <input type="text" th:field="*{groupNumber}" />
+        <br/>
+        <button type="submit">Add</button>
+    </form>
+</body>
+</html>
+editUser.html:
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Edit User</title>
+</head>
+<body>
+    <h1>Edit User</h1>
+    <form th:action="@{/users/edit/{id}(id=${user.id})}" th:object="${user}" method="post">
+        <label>First Name:</label>
+        <input type="text" th:field="*{firstName}" />
+        <br/>
+        <label>Last Name:</label>
+        <input type="text" th:field="*{lastName}" />
+        <br/>
+        <label>Age:</label>
+        <input type="number" th:field="*{age}" />
+        <br/>
+        <label>Group Number:</label>
+        <input type="text" th:field="*{groupNumber}" />
+        <br/>
+        <button type="submit">Save</button>
+    </form>
+</body>
