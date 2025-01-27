@@ -1,0 +1,237 @@
+Добавить в спринг буте зависимости:
+//Spring Web
+//Spring Data JPA
+//Thymeleaf
+//MySQL Driver
+
+Код:
+//aplication properties
+spring.application.name=task44
+spring.datasource.url=jdbc:mysql://localhost:3306/tasksdb?useSSL=false&serverTimezone=UTC
+spring.datasource.username=root
+spring.datasource.password=root
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+spring.thymeleaf.prefix=classpath:/templates/
+spring.thymeleaf.suffix=.html
+
+//dependencies
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	runtimeOnly 'com.mysql:mysql-connector-j'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+//CalculationResults
+package org.example.task44;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "calculation_results")
+public class CalculationResult {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String expression;
+    private double result;
+
+    // Геттеры, сеттеры, конструкторы (пустой и с параметрами)
+    public CalculationResult() {}
+
+    public CalculationResult(String expression, double result) {
+        this.expression = expression;
+        this.result = result;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getExpression() { return expression; }
+    public void setExpression(String expression) { this.expression = expression; }
+    public double getResult() { return result; }
+    public void setResult(double result) { this.result = result; }
+}
+
+//CalculationResultRepository
+package org.example.task44;
+
+
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface CalculationResultRepository extends JpaRepository<CalculationResult, Long> {
+}
+
+//CalculationService
+package org.example.task44;
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class CalculationService {
+
+    @Autowired
+    private CalculationResultRepository calculationResultRepository;
+
+    public CalculationResult saveResult(String expression, double result) {
+        CalculationResult calculationResult = new CalculationResult(expression, result);
+        return calculationResultRepository.save(calculationResult);
+    }
+
+    public List<CalculationResult> getAllResults() {
+        return calculationResultRepository.findAll();
+    }
+}
+
+//CalculationController
+//CalculatorController
+package org.example.task44;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
+
+@Controller
+public class CalculatorController {
+
+    @Autowired
+    private CalculationService calculationService;
+
+    @GetMapping("/")
+    public String home(Model model) {
+        List<CalculationResult> results = calculationService.getAllResults();
+        model.addAttribute("results", results);
+        return "index";
+    }
+
+    @PostMapping("/calculate")
+    public String calculate(@RequestParam String expression, Model model) {
+        try {
+            double result = evaluateExpression(expression);
+            calculationService.saveResult(expression, result);
+            model.addAttribute("result", result);
+        } catch (Exception e) {
+            model.addAttribute("error", "Неверное выражение");
+        }
+        return "redirect:/";
+    }
+
+    private double evaluateExpression(String expression) {
+        // Простой парсер выражений для демонстрации
+        return new Object() {
+            int pos = -1, ch;
+
+            void nextChar() {
+                ch = (++pos < expression.length()) ? expression.charAt(pos) : -1;
+            }
+
+            boolean eat(int charToEat) {
+                while (ch == ' ') nextChar();
+                if (ch == charToEat) {
+                    nextChar();
+                    return true;
+                }
+                return false;
+            }
+
+            double parse() {
+                nextChar();
+                double x = parseExpression();
+                if (pos < expression.length()) throw new RuntimeException("Unexpected: " + (char)ch);
+                return x;
+            }
+
+            double parseExpression() {
+                double x = parseTerm();
+                for (;;) {
+                    if      (eat('+')) x += parseTerm(); // addition
+                    else if (eat('-')) x -= parseTerm(); // subtraction
+                    else return x;
+                }
+            }
+
+            double parseTerm() {
+                double x = parseFactor();
+                for (;;) {
+                    if      (eat('*')) x *= parseFactor(); // multiplication
+                    else if (eat('/')) x /= parseFactor(); // division
+                    else return x;
+                }
+            }
+
+            double parseFactor() {
+                if (eat('+')) return parseFactor(); // unary plus
+                if (eat('-')) return -parseFactor(); // unary minus
+
+                double x;
+                int startPos = this.pos;
+                if (eat('(')) { // parentheses
+                    x = parseExpression();
+                    eat(')');
+                } else if ((ch >= '0' && ch <= '9') || ch == '.') { // numbers
+                    while ((ch >= '0' && ch <= '9') || ch == '.') nextChar();
+                    x = Double.parseDouble(expression.substring(startPos, this.pos));
+                } else if (ch >= 'a' && ch <= 'z') { // functions
+                    while (ch >= 'a' && ch <= 'z') nextChar();
+                    String func = expression.substring(startPos, this.pos);
+                    x = parseFactor();
+                    if (func.equals("sqrt")) x = Math.sqrt(x);
+                    else throw new RuntimeException("Unknown function: " + func);
+                } else {
+                    throw new RuntimeException("Unexpected: " + (char)ch);
+                }
+
+                if (eat('^')) x = Math.pow(x, parseFactor()); // exponentiation
+
+                return x;
+            }
+        }.parse();
+    }
+}
+
+
+//index.html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Арифметический калькулятор</title>
+</head>
+<body>
+    <h1>Арифметический калькулятор</h1>
+    <form th:action="@{/calculate}" method="post">
+        <label for="expression">Введите выражение:</label>
+        <input type="text" id="expression" name="expression" required>
+        <button type="submit">Вычислить</button>
+    </form>
+    <div th:if="${error}" th:text="${error}"></div>
+    <div th:if="${result}">
+        <h2>Результат: <span th:text="${result}"></span></h2>
+    </div>
+    <h2>История вычислений</h2>
+    <table border="1">
+        <tr>
+            <th>Выражение</th>
+            <th>Результат</th>
+        </tr>
+        <tr th:each="result : ${results}">
+            <td th:text="${result.expression}"></td>
+            <td th:text="${result.result}"></td>
+        </tr>
+    </table>
+</body>
+</html>
