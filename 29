@@ -1,45 +1,71 @@
-import java.util.*;
-import java.sql.*;
+Это добавить в pom:
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <version>42.7.4</version>
+</dependency>
 
-public class ListSortDesc {
-    private static final String URL = "jdbc:mysql://localhost:3306/mydatabase";
-    private static final String USER = "root";
-    private static final String PASSWORD = "root";
+Код
+package org.example;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
+public class RandomNumberSorter {
+
+    private static final String URL = "jdbc:postgresql://localhost:5432/mydatabase";
+    private static final String USER = "postgres";
+    private static final String PASSWORD = "1";
 
     public static void main(String[] args) {
-        List<Integer> list = new ArrayList<>(100);
-        Random rnd = new Random();
-        for (int i = 0; i < 100; i++) {
-            list.add(rnd.nextInt(100) + 1);
-        }
+        // Создаем список и заполняем его случайными числами
+        List<Integer> numbers = generateRandomNumbers(100, 1, 100);
 
-        // Сортировка по убыванию
-        list.sort(Collections.reverseOrder());
+        // Сортируем список по убыванию
+        Collections.sort(numbers, Collections.reverseOrder());
 
-        // Вывод первых 10
+        // Выводим первые 10 значений
+        System.out.println("Первые 10 значений:");
         for (int i = 0; i < 10; i++) {
-            System.out.print(list.get(i) + " ");
+            System.out.println(numbers.get(i));
         }
-        System.out.println();
 
-        // Сохранение в БД
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
-            String createSql = "CREATE TABLE IF NOT EXISTS sorted_nums("
-                             + "id INT AUTO_INCREMENT PRIMARY KEY, "
-                             + "value INT)";
-            conn.createStatement().execute(createSql);
-            conn.createStatement().execute("TRUNCATE TABLE sorted_nums");
+        // Сохраняем числа в базу данных
+        saveNumbersToDatabase(numbers);
+    }
 
-            String insertSql = "INSERT INTO sorted_nums(value) VALUES (?)";
-            try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
-                for (Integer val : list) {
-                    ps.setInt(1, val);
-                    ps.addBatch();
-                }
-                ps.executeBatch();
+    private static List<Integer> generateRandomNumbers(int count, int min, int max) {
+        List<Integer> numbers = new ArrayList<>();
+        Random random = new Random();
+        for (int i = 0; i < count; i++) {
+            numbers.add(random.nextInt((max - min) + 1) + min);
+        }
+        return numbers;
+    }
+
+    private static void saveNumbersToDatabase(List<Integer> numbers) {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement pstmt = conn.prepareStatement("INSERT INTO numbers (value) VALUES (?)")) {
+
+            for (Integer number : numbers) {
+                pstmt.setInt(1, number);
+                pstmt.addBatch();
             }
-        } catch (SQLException e) {
+            pstmt.executeBatch();
+            System.out.println("Числа сохранены в базу данных.");
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 }
+
+Это добавить в sql, читайв одну строку, табы не нужны:
+CREATE TABLE numbers (
+    id SERIAL PRIMARY KEY,
+    value INTEGER
+);
