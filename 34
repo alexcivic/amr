@@ -1,48 +1,75 @@
+Это добавить в pom:
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <version>42.7.4</version>
+</dependency>
+Код
 package org.example;
 
 import java.sql.*;
-import java.util.*;
 
-public class TwoNameCollections {
-    private static final String URL = "jdbc:mysql://localhost:3306/mydatabase";
-    private static final String USER = "root";
-    private static final String PASSWORD = "root";
+import java.util.ArrayList;
+import java.util.List;
+
+public class NamesProgram {
+
+    private static final String URL = "jdbc:postgresql://localhost:5432/mydatabase";
+    private static final String USER = "postgres";
+    private static final String PASSWORD = "1";
 
     public static void main(String[] args) {
-        List<String> names1 = Arrays.asList("Иван", "Петр", "Сергей");
-        List<String> names2 = Arrays.asList("Анна", "Мария", "Елена");
+        // Создаем две коллекции с именами
+        List<String> namesList1 = new ArrayList<>();
+        namesList1.add("Alice");
+        namesList1.add("Bob");
+        namesList1.add("Charlie");
 
-        // Сохранение в БД
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
-            String createSql = "CREATE TABLE IF NOT EXISTS names("
-                    + "id INT AUTO_INCREMENT PRIMARY KEY, "
-                    + "name VARCHAR(50))";
-            conn.createStatement().execute(createSql);
-            conn.createStatement().execute("TRUNCATE TABLE names");
+        List<String> namesList2 = new ArrayList<>();
+        namesList2.add("David");
+        namesList2.add("Eve");
+        namesList2.add("Frank");
 
-            String insertSql = "INSERT INTO names(name) VALUES (?)";
-            try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
-                for (String name : names1) {
-                    ps.setString(1, name);
-                    ps.addBatch();
-                }
-                for (String name : names2) {
-                    ps.setString(1, name);
-                    ps.addBatch();
-                }
-                ps.executeBatch();
+        // Сохраняем имена в базу данных
+        saveNamesToDatabase(namesList1);
+        saveNamesToDatabase(namesList2);
+
+        // Выводим имена из базы данных
+        printNamesFromDatabase();
+    }
+
+    private static void saveNamesToDatabase(List<String> names) {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement pstmt = conn.prepareStatement("INSERT INTO names (name) VALUES (?)")) {
+
+            for (String name : names) {
+                pstmt.setString(1, name);
+                pstmt.addBatch();
             }
+            pstmt.executeBatch();
+            System.out.println("Имена сохранены в базу данных.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-            // Вывод
-            String selectSql = "SELECT name FROM names";
-            try (Statement st = conn.createStatement();
-                 ResultSet rs = st.executeQuery(selectSql)) {
-                while (rs.next()) {
-                    System.out.println(rs.getString("name"));
-                }
+    private static void printNamesFromDatabase() {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT name FROM names")) {
+
+            System.out.println("Имена из базы данных:");
+            while (rs.next()) {
+                System.out.println(rs.getString("name"));
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 }
+
+Код для sql, читай в одну строку, не нужно табы читать
+CREATE TABLE names (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255)
+);
