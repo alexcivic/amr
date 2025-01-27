@@ -1,0 +1,69 @@
+package org.example;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+public class MultiThreadedLogger {
+
+    private static final String DB_URL = "jdbc:postgresql://localhost:5432/mydatabase";
+    private static final String DB_USER = "postgres";
+    private static final String DB_PASSWORD = "1";
+
+    public static void main(String[] args) {
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(3);
+
+        // Запуск первого потока, который выводит время каждые 5 секунд
+        scheduler.scheduleAtFixedRate(() -> {
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            String message = "Прошло времени: " + elapsedTime / 1000 + " секунд";
+            System.out.println(message);
+            saveToDatabase(message);
+        }, 0, 5, TimeUnit.SECONDS);
+
+        // Запуск второго потока, который выводит сообщение каждые 7 секунд
+        scheduler.scheduleAtFixedRate(() -> {
+            String message = "Сообщение каждые 7 секунд";
+            System.out.println(message);
+            saveToDatabase(message);
+        }, 0, 7, TimeUnit.SECONDS);
+
+        // Запуск третьего потока, который выводит сообщение каждые 10 секунд
+        scheduler.scheduleAtFixedRate(() -> {
+            String message = "Сообщение каждые 10 секунд";
+            System.out.println(message);
+            saveToDatabase(message);
+        }, 0, 10, TimeUnit.SECONDS);
+
+        // Остановка программы через одну минуту
+        scheduler.schedule(() -> {
+            scheduler.shutdown();
+            System.out.println("Программа завершена.");
+        }, 60, TimeUnit.SECONDS);
+    }
+
+    private static long startTime = System.currentTimeMillis();
+
+    private static void saveToDatabase(String message) {
+        String sql = "INSERT INTO program_logs (message) VALUES (?)";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, message);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+sql:
+CREATE TABLE program_logs (
+    id SERIAL PRIMARY KEY,
+    message TEXT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
