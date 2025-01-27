@@ -1,62 +1,69 @@
-цикл while в MySQL/PostgreSQL
-использовать maven
-писать в 1 файле
-добавить в pom.xml
-
-CREATE DATABASE WordDB;
-
- USE WordDB;
-
- CREATE TABLE Words (
-                    	id INT AUTO_INCREMENT PRIMARY KEY,
-                    	word VARCHAR(255) NOT NULL
- );
+это в pom
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <version>42.7.4</version> 
+</dependency>
  
+Код
 package org.example;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
-public class Task6 {
+public class AlphabetProgram {
 
-    // Константы для подключения к базе данных
-    private static final String URL = "jdbc:mysql://localhost:3306/AlphabetDB";
-    private static final String USER = "root"; // Ваш пользователь
-    private static final String PASSWORD = "root"; // Ваш пароль
+    private static final String URL = "jdbc:postgresql://localhost:5432/mydatabase";
+    private static final String USER = "postgres";
+    private static final String PASSWORD = "1";
 
     public static void main(String[] args) {
-        char letter = 'A'; // Начальная буква алфавита
+        // Создаем таблицу и вставляем буквы алфавита
+        createAndPopulateAlphabetTable();
 
-        // SQL-запрос для вставки данных
-        String insertQuery = "INSERT INTO Alphabet (letter) VALUES (?)";
+        // Выводим буквы алфавита, используя цикл while
+        printAlphabet();
+    }
 
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
-            System.out.println("Подключение к базе данных успешно!");
+    private static void createAndPopulateAlphabetTable() {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             Statement stmt = conn.createStatement()) {
 
-            try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery)) {
-                while (letter <= 'Z') { // Пока не достигнем конца алфавита
-                    preparedStatement.setString(1, String.valueOf(letter)); // Устанавливаем букву
-                    preparedStatement.executeUpdate(); // Выполняем вставку
-                    System.out.println("Добавлена буква: " + letter); // Логируем добавление
-                    letter++; // Переход к следующей букве
+            // Создаем таблицу, если она еще не существует
+            stmt.execute("CREATE TABLE IF NOT EXISTS alphabet (id SERIAL PRIMARY KEY, letter CHAR(1))");
+
+            // Вставляем буквы алфавита
+            String insertQuery = "INSERT INTO alphabet (letter) VALUES (?)";
+            try (PreparedStatement pstmt = conn.prepareStatement(insertQuery)) {
+                for (char c = 'A'; c <= 'Z'; c++) {
+                    pstmt.setString(1, String.valueOf(c));
+                    pstmt.addBatch();
                 }
+                pstmt.executeBatch();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-            System.out.println("Все буквы алфавита добавлены в базу данных.");
-        } catch (SQLException e) {
-            System.err.println("Ошибка подключения к базе данных: " + e.getMessage());
+    private static void printAlphabet() {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT letter FROM alphabet")) {
+
+            while (rs.next()) {
+                System.out.print(rs.getString("letter") + " ");
+            }
+            System.out.println();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
-
-добавить в sql консоль
-CREATE DATABASE AlphabetDB;
-
- USE AlphabetDB;
-
- CREATE TABLE Alphabet (
-                       	id INT AUTO_INCREMENT PRIMARY KEY,
-                       	letter CHAR(1) NOT NULL
- );
+это вставить в sql, можешь читать в одну строку, табы не нужны:
+CREATE TABLE alphabet (
+    id SERIAL PRIMARY KEY,
+    letter CHAR(1));
