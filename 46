@@ -1,0 +1,162 @@
+package org.example;
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class MobileDatabaseApp {
+
+    private static final String URL = "jdbc:mysql://localhost:3306/worddb";
+    private static final String USER = "root"; // Замените на имя пользователя MySQL
+    private static final String PASSWORD = "root"; // Замените на пароль MySQL
+
+    public static void main(String[] args) {
+        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
+            createDatabase(connection);
+            addInitialData(connection);
+
+            Scanner scanner = new Scanner(System.in);
+            while (true) {
+                System.out.println("\nМеню:");
+                System.out.println("1. Показать список телефонов");
+                System.out.println("2. Добавить новый телефон");
+                System.out.println("3. Изменить телефон");
+                System.out.println("4. Удалить телефон");
+                System.out.println("5. Выход");
+                System.out.print("Выберите действие: ");
+
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // Очистка буфера
+
+                switch (choice) {
+                    case 1 -> showPhones(connection);
+                    case 2 -> addPhone(connection, scanner);
+                    case 3 -> updatePhone(connection, scanner);
+                    case 4 -> deletePhone(connection, scanner);
+                    case 5 -> {
+                        System.out.println("Выход...");
+                        return;
+                    }
+                    default -> System.out.println("Неверный выбор, попробуйте снова.");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void createDatabase(Connection connection) throws SQLException {
+        String createTableSQL = "CREATE TABLE IF NOT EXISTS phones (" +
+                "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                "manufacturer VARCHAR(50), " +
+                "model VARCHAR(50), " +
+                "release_year INT, " +
+                "screen_size FLOAT" +
+                ")";
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute(createTableSQL);
+            System.out.println("Таблица создана или уже существует.");
+        }
+    }
+
+    private static void addInitialData(Connection connection) throws SQLException {
+        String insertSQL = "INSERT INTO phones (manufacturer, model, release_year, screen_size) VALUES (?, ?, ?, ?)";
+        String[][] initialData = {
+                {"Apple", "iPhone 13", "2021", "6.1"},
+                {"Samsung", "Galaxy S21", "2021", "6.2"},
+                {"Xiaomi", "Mi 11", "2021", "6.81"},
+                {"Google", "Pixel 6", "2021", "6.4"},
+                {"OnePlus", "9 Pro", "2021", "6.7"},
+                {"Sony", "Xperia 1 III", "2021", "6.5"},
+                {"Huawei", "P50 Pro", "2021", "6.6"},
+                {"Motorola", "Edge 20 Pro", "2021", "6.7"},
+                {"Asus", "ROG Phone 5", "2021", "6.78"},
+                {"Nokia", "X20", "2021", "6.67"}
+        };
+
+        try (PreparedStatement pstmt = connection.prepareStatement(insertSQL)) {
+            for (String[] phone : initialData) {
+                pstmt.setString(1, phone[0]);
+                pstmt.setString(2, phone[1]);
+                pstmt.setInt(3, Integer.parseInt(phone[2]));
+                pstmt.setFloat(4, Float.parseFloat(phone[3]));
+                pstmt.addBatch();
+            }
+            pstmt.executeBatch();
+            System.out.println("Начальные данные добавлены.");
+        }
+    }
+
+    private static void showPhones(Connection connection) throws SQLException {
+        String query = "SELECT * FROM phones";
+        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
+            System.out.println("\nСписок телефонов:");
+            while (rs.next()) {
+                System.out.printf("ID: %d, Производитель: %s, Модель: %s, Год выпуска: %d, Диагональ экрана: %.2f\n",
+                        rs.getInt("id"),
+                        rs.getString("manufacturer"),
+                        rs.getString("model"),
+                        rs.getInt("release_year"),
+                        rs.getFloat("screen_size"));
+            }
+        }
+    }
+
+    private static void addPhone(Connection connection, Scanner scanner) throws SQLException {
+        System.out.print("Введите производителя: ");
+        String manufacturer = scanner.nextLine();
+        System.out.print("Введите модель: ");
+        String model = scanner.nextLine();
+        System.out.print("Введите год выпуска: ");
+        int release_year = scanner.nextInt();
+        System.out.print("Введите диагональ экрана: ");
+        float screenSize = scanner.nextFloat();
+
+        String insertSQL = "INSERT INTO phones (manufacturer, model, release_year, screen_size) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(insertSQL)) {
+            pstmt.setString(1, manufacturer);
+            pstmt.setString(2, model);
+            pstmt.setInt(3, release_year);
+            pstmt.setFloat(4, screenSize);
+            pstmt.executeUpdate();
+            System.out.println("Телефон добавлен.");
+        }
+    }
+
+    private static void updatePhone(Connection connection, Scanner scanner) throws SQLException {
+        System.out.print("Введите ID телефона для изменения: ");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Очистка буфера
+
+        System.out.print("Введите нового производителя: ");
+        String manufacturer = scanner.nextLine();
+        System.out.print("Введите новую модель: ");
+        String model = scanner.nextLine();
+        System.out.print("Введите новый год выпуска: ");
+        int release_year = scanner.nextInt();
+        System.out.print("Введите новую диагональ экрана: ");
+        float screenSize = scanner.nextFloat();
+
+        String updateSQL = "UPDATE phones SET manufacturer = ?, model = ?, release_year = ?, screen_size = ? WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(updateSQL)) {
+            pstmt.setString(1, manufacturer);
+            pstmt.setString(2, model);
+            pstmt.setInt(3, release_year);
+            pstmt.setFloat(4, screenSize);
+            pstmt.setInt(5, id);
+            pstmt.executeUpdate();
+            System.out.println("Телефон обновлен.");
+        }
+    }
+
+    private static void deletePhone(Connection connection, Scanner scanner) throws SQLException {
+        System.out.print("Введите ID телефона для удаления: ");
+        int id = scanner.nextInt();
+
+        String deleteSQL = "DELETE FROM phones WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(deleteSQL)) {
+            pstmt.setInt(1, id);
+            pstmt.executeUpdate();
+            System.out.println("Телефон удален.");
+        }
+    }
+}
