@@ -1,193 +1,173 @@
-pom:
-<dependencies>
- 	<dependency>
-     	<groupId>mysql</groupId>
-     	<artifactId>mysql-connector-java</artifactId>
-     	<version>8.0.33</version>
- 	</dependency>
- 	<dependency>
-     	<groupId>org.apache.poi</groupId>
-     	<artifactId>poi-ooxml</artifactId>
-     	<version>5.2.2</version>
- 	</dependency>
- </dependencies>
-
-
-java:
+это в pom
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <version>42.7.4</version> 
+</dependency>
+<dependency>
+    <groupId>org.apache.poi</groupId>
+    <artifactId>poi-ooxml</artifactId>
+    <version>5.4.0</version>
+</dependency>
+ 
+Код:
 package org.example;
 
- import java.sql.*;
- import java.util.Scanner;
- import org.apache.poi.ss.usermodel.*;
- import org.apache.poi.xssf.usermodel.XSSFWorkbook;
- import java.io.FileOutputStream;
- import java.io.IOException;
+import java.io.FileOutputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.Scanner;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
- public class Task1 {
+public class MathOperations {
 
- 	private static final String DB_URL = "jdbc:mysql://localhost:3306/task1db";
- 	private static final String DB_USER = "root";
- 	private static final String DB_PASSWORD = "root";
+    private static final String URL = "jdbc:postgresql://localhost:5432/mydatabase";
+    private static final String USER = "postgres";
+    private static final String PASSWORD = "1";
 
- 	public static void main(String[] args) {
-     	Scanner scanner = new Scanner(System.in);
-     	Connection connection = null;
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        boolean exit = false;
 
-     	try {
-         	connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-         	createTableIfNotExists(connection);
+        while (!exit) {
+            System.out.println("Выберите действие:");
+            System.out.println("1. Вывести все таблицы из PostgreSQL.");
+            System.out.println("2. Создать таблицу в PostgreSQL.");
+            System.out.println("3. Сложение чисел.");
+            System.out.println("4. Вычитание чисел.");
+            System.out.println("5. Умножение чисел.");
+            System.out.println("6. Деление чисел.");
+            System.out.println("7. Деление чисел по модулю (остаток).");
+            System.out.println("8. Возведение числа в модуль.");
+            System.out.println("9. Возведение числа в степень.");
+            System.out.println("10. Сохранить все данные из PostgreSQL в Excel и вывести на экран.");
+            System.out.println("0. Выход.");
 
-         	while (true) {
-             	printMenu();
-             	int choice = scanner.nextInt();
-             	scanner.nextLine(); // Consume newline
+            int choice = scanner.nextInt();
+            switch (choice) {
+                case 1:
+                    listTables();
+                    break;
+                case 2:
+                    createTable();
+                    break;
+                case 3:
+                    performOperation("Сложение", (a, b) -> a + b);
+                    break;
+                case 4:
+                    performOperation("Вычитание", (a, b) -> a - b);
+                    break;
+                case 5:
+                    performOperation("Умножение", (a, b) -> a * b);
+                    break;
+                case 6:
+                    performOperation("Деление", (a, b) -> a / b);
+                    break;
+                case 7:
+                    performOperation("Деление по модулю", (a, b) -> a % b);
+                    break;
+                case 8:
+                    performOperation("Модуль числа", (a, b) -> Math.abs(a));
+                    break;
+                case 9:
+                    performOperation("Возведение в степень", (a, b) -> Math.pow(a, b));
+                    break;
+                case 10:
+                    saveToExcel();
+                    break;
+                case 0:
+                    exit = true;
+                    break;
+                default:
+                    System.out.println("Неверный выбор. Попробуйте снова.");
+            }
+        }
+        scanner.close();
+    }
 
-             	switch (choice) {
-                 	case 1:
-                     	showAllTables(connection);
-                     	break;
-                 	case 2:
-                     	createTable(connection);
-                     	break;
-                 	case 3:
-                     	performOperation(connection, scanner, "Addition", (a, b) -> a + b);
-                     	break;
-                 	case 4:
-                     	performOperation(connection, scanner, "Subtraction", (a, b) -> a - b);
-                     	break;
-                 	case 5:
-                     	performOperation(connection, scanner, "Multiplication", (a, b) -> a * b);
-                     	break;
-                 	case 6:
-                     	performOperation(connection, scanner, "Division", (a, b) -> a / b);
-                     	break;
-                	 case 7:
-                     	performOperation(connection, scanner, "Modulus", (a, b) -> a % b);
-                     	break;
-                 	case 8:
-                     	performOperation(connection, scanner, "Absolute", (a, b) -> Math.abs(a));
-                     	break;
-                 	case 9:
-                     	performOperation(connection, scanner, "Power", (a, b) -> Math.pow(a, b));
-                     	break;
-                 	case 10:
-                     	exportToExcel(connection);
-                     	break;
-                 	default:
-                     	System.out.println("Invalid choice. Please try again.");
-             	}
-         	}
-     	} catch (SQLException e) {
-         	e.printStackTrace();
-     	} finally {
-         	if (connection != null) {
-             	try {
-                 	connection.close();
-             	} catch (SQLException e) {
-                 	e.printStackTrace();
-             	}
-         	}
-         	scanner.close();
-     	}
- 	}
+    private static void listTables() {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")) {
 
- 	private static void printMenu() {
-     	System.out.println("1. Вывести все таблицы из MySQL.");
-     	System.out.println("2. Создать таблицу в MySQL.");
-     	System.out.println("3. Сложение чисел, результат сохранить в MySQL с последующим выводом в консоль.");
-     	System.out.println("4. Вычитание чисел, результат сохранить в MySQL с последующим выводом в консоль.");
-     	System.out.println("5. Умножение чисел, результат сохранить в MySQL с последующим выводом в консоль.");
-     	System.out.println("6. Деление чисел, результат сохранить в MySQL с последующим выводом в консоль.");
-     	System.out.println("7. Деление чисел по модулю (остаток), результат сохранить в MySQL с последующим выводом в консоль.");
-   	  System.out.println("8. Возведение числа в модуль, результат сохранить в MySQL с последующим выводом в консоль.");
-     	System.out.println("9. Возведение числа в степень, результат сохранить в MySQL с последующим выводом в консоль.");
-     	System.out.println("10. Сохранить все данные (вышеполученные результаты) из MySQL в Excel и вывести на экран.");
- 	}
+            while (rs.next()) {
+                System.out.println(rs.getString("table_name"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
- 	private static void createTableIfNotExists(Connection connection) throws SQLException {
-     	String sql = "CREATE TABLE IF NOT EXISTS results (" +
-             	"id INT AUTO_INCREMENT PRIMARY KEY," +
-             	"operation VARCHAR(50)," +
-             	"result DOUBLE" +
-             	")";
-     	try (Statement statement = connection.createStatement()) {
-         	statement.execute(sql);
-     	}
- 	}
+    private static void createTable() {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             Statement stmt = conn.createStatement()) {
 
- 	private static void showAllTables(Connection connection) throws SQLException {
-     	String sql = "SHOW TABLES";
-     	try (Statement statement = connection.createStatement();
-          	ResultSet resultSet = statement.executeQuery(sql)) {
-         	while (resultSet.next()) {
-             	System.out.println(resultSet.getString(1));
-         	}
-     	}
- 	}
+            stmt.execute("CREATE TABLE IF NOT EXISTS results (id SERIAL PRIMARY KEY, operation VARCHAR(50), result DOUBLE PRECISION)");
+            System.out.println("Таблица создана.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
- 	private static void createTable(Connection connection) throws SQLException {
-     	String tableName = "new_table";
-     	String sql = "CREATE TABLE " + tableName + " (" +
-             	"id INT AUTO_INCREMENT PRIMARY KEY," +
-             	"data VARCHAR(255)" +
-             	")";
-     	try (Statement statement = connection.createStatement()) {
-         	statement.execute(sql);
-         	System.out.println("Table " + tableName + " created successfully.");
-     	}
- 	}
+    private static void performOperation(String operation, Operation op) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Введите первое число: ");
+        double a = scanner.nextDouble();
+        System.out.print("Введите второе число: ");
+        double b = scanner.nextDouble();
+        double result = op.apply(a, b);
 
- 	private static void performOperation(Connection connection, Scanner scanner, String operation, Operation op) throws SQLException {
-     	System.out.print("Enter first number: ");
-     	double a = scanner.nextDouble();
-     	System.out.print("Enter second number: ");
-     	double b = scanner.nextDouble();
-     	double result = op.apply(a, b);
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement pstmt = conn.prepareStatement("INSERT INTO results (operation, result) VALUES (?, ?)")) {
 
-     	String sql = "INSERT INTO results (operation, result) VALUES (?, ?)";
-     	try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-         	preparedStatement.setString(1, operation);
-         	preparedStatement.setDouble(2, result);
-             preparedStatement.executeUpdate();
-     	}
+            pstmt.setString(1, operation);
+            pstmt.setDouble(2, result);
+            pstmt.executeUpdate();
+            System.out.println("Результат: " + result);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-     	System.out.println("Result of " + operation + ": " + result);
- 	}
+    private static void saveToExcel() {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM results")) {
 
- 	private static void exportToExcel(Connection connection) throws SQLException {
-     	String sql = "SELECT * FROM results";
-     	try (Statement statement = connection.createStatement();
-          	ResultSet resultSet = statement.executeQuery(sql)) {
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("Results");
+            Row header = sheet.createRow(0);
+            header.createCell(0).setCellValue("ID");
+            header.createCell(1).setCellValue("Operation");
+            header.createCell(2).setCellValue("Result");
 
-         	Workbook workbook = new XSSFWorkbook();
-         	Sheet sheet = workbook.createSheet("Results");
+            int rowNum = 1;
+            while (rs.next()) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(rs.getInt("id"));
+                row.createCell(1).setCellValue(rs.getString("operation"));
+                row.createCell(2).setCellValue(rs.getDouble("result"));
+            }
 
-         	Row header = sheet.createRow(0);
-         	header.createCell(0).setCellValue("ID");
-         	header.createCell(1).setCellValue("Operation");
-         	header.createCell(2).setCellValue("Result");
+            try (FileOutputStream fileOut = new FileOutputStream("results.xlsx")) {
+                workbook.write(fileOut);
+            }
 
-   	      int rowNum = 1;
-         	while (resultSet.next()) {
-             	Row row = sheet.createRow(rowNum++);
-             	row.createCell(0).setCellValue(resultSet.getInt("id"));
-             	row.createCell(1).setCellValue(resultSet.getString("operation"));
-             	row.createCell(2).setCellValue(resultSet.getDouble("result"));
-         	}
+            System.out.println("Данные сохранены в results.xlsx");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-         	try (FileOutputStream fileOut = new FileOutputStream("results.xlsx")) {
-             	workbook.write(fileOut);
-         	}
+    @FunctionalInterface
+    interface Operation {
+        double apply(double a, double b);
+    }
+}
+это в sql это в одну строку можешь говорить:
 
-    	     workbook.close();
-         	System.out.println("Data exported to results.xlsx");
-     	} catch (IOException e) {
-         	e.printStackTrace();
-     	}
- 	}
-
- 	@FunctionalInterface
- 	interface Operation {
-     	double apply(double a, double b);
- 	}
- }
+CREATE TABLE results (id SERIAL PRIMARY KEY, operation VARCHAR(50), result DOUBLE PRECISION);
