@@ -1,0 +1,239 @@
+
+Код
+package org.example;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Scanner;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+public class InteractiveMenu {
+
+    private static final String DB_URL = "jdbc:postgresql://localhost:5432/mydatabase";
+    private static final String DB_USER = "postgres";
+    private static final String DB_PASSWORD = "1";
+
+    private static String string1;
+    private static String string2;
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        boolean exit = false;
+
+        while (!exit) {
+            System.out.println("Выберите действие:");
+            System.out.println("1. Вывести все таблицы из PostgreSQL.");
+            System.out.println("2. Создать таблицу в PostgreSQL.");
+            System.out.println("3. Ввести две строки с клавиатуры, результат сохранить в PostgreSQL с последующим выводом в консоль.");
+            System.out.println("4. Подсчитать размер ранее введенных строк, результат сохранить в PostgreSQL с последующим выводом в консоль.");
+            System.out.println("5. Объединить две строки в единое целое, результат сохранить в PostgreSQL с последующим выводом в консоль.");
+            System.out.println("6. Сравнить две ранее введенные строки, результат сохранить в PostgreSQL с последующим выводом в консоль.");
+            System.out.println("7. Сохранить все данные (вышеполученные результаты) из PostgreSQL в Excel и вывести на экран.");
+            System.out.println("8. Выйти.");
+
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            switch (choice) {
+                case 1:
+                    showAllTables();
+                    break;
+                case 2:
+                    createTable();
+                    break;
+                case 3:
+                    inputStrings(scanner);
+                    break;
+                case 4:
+                    calculateLengths();
+                    break;
+                case 5:
+                    combineStrings();
+                    break;
+                case 6:
+                    compareStrings();
+                    break;
+                case 7:
+                    saveToExcel();
+                    break;
+                case 8:
+                    exit = true;
+                    break;
+                default:
+                    System.out.println("Неверный выбор. Попробуйте снова.");
+            }
+        }
+
+        scanner.close();
+    }
+
+    private static void showAllTables() {
+        String sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            System.out.println("Таблицы в базе данных:");
+            while (rs.next()) {
+                System.out.println(rs.getString("table_name"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void createTable() {
+        String sql = "CREATE TABLE IF NOT EXISTS strings_data (" +
+                "id SERIAL PRIMARY KEY," +
+                "string1 TEXT," +
+                "string2 TEXT," +
+                "length1 INT," +
+                "length2 INT," +
+                "combined_string TEXT," +
+                "comparison_result TEXT)";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+            System.out.println("Таблица создана или уже существует.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void inputStrings(Scanner scanner) {
+        System.out.println("Введите первую строку (не менее 50 символов):");
+        string1 = scanner.nextLine();
+        System.out.println("Введите вторую строку (не менее 50 символов):");
+        string2 = scanner.nextLine();
+
+        if (string1.length() < 50 || string2.length() < 50) {
+            System.out.println("Строки должны быть не менее 50 символов.");
+            return;
+        }
+
+        String sql = "INSERT INTO strings_data (string1, string2) VALUES (?, ?)";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, string1);
+            pstmt.setString(2, string2);
+            pstmt.executeUpdate();
+            System.out.println("Строки сохранены в базу данных.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void calculateLengths() {
+        int length1 = string1.length();
+        int length2 = string2.length();
+
+        String sql = "UPDATE strings_data SET length1 = ?, length2 = ? WHERE string1 = ? AND string2 = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, length1);
+            pstmt.setInt(2, length2);
+            pstmt.setString(3, string1);
+            pstmt.setString(4, string2);
+            pstmt.executeUpdate();
+            System.out.println("Длины строк сохранены в базу данных.");
+            System.out.println("Длина первой строки: " + length1);
+            System.out.println("Длина второй строки: " + length2);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void combineStrings() {
+        String combinedString = string1 + string2;
+
+        String sql = "UPDATE strings_data SET combined_string = ? WHERE string1 = ? AND string2 = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, combinedString);
+            pstmt.setString(2, string1);
+            pstmt.setString(3, string2);
+            pstmt.executeUpdate();
+            System.out.println("Объединенная строка сохранена в базу данных.");
+            System.out.println("Объединенная строка: " + combinedString);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void compareStrings() {
+        String comparisonResult = string1.equals(string2) ? "Строки равны" : "Строки не равны";
+
+        String sql = "UPDATE strings_data SET comparison_result = ? WHERE string1 = ? AND string2 = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, comparisonResult);
+            pstmt.setString(2, string1);
+            pstmt.setString(3, string2);
+            pstmt.executeUpdate();
+            System.out.println("Результат сравнения сохранен в базу данных.");
+            System.out.println("Результат сравнения: " + comparisonResult);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void saveToExcel() {
+        String sql = "SELECT * FROM strings_data";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("StringsData");
+
+            Row header = sheet.createRow(0);
+            header.createCell(0).setCellValue("ID");
+            header.createCell(1).setCellValue("String1");
+            header.createCell(2).setCellValue("String2");
+            header.createCell(3).setCellValue("Length1");
+            header.createCell(4).setCellValue("Length2");
+            header.createCell(5).setCellValue("CombinedString");
+            header.createCell(6).setCellValue("ComparisonResult");
+
+            int rowNum = 1;
+            while (rs.next()) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(rs.getInt("id"));
+                row.createCell(1).setCellValue(rs.getString("string1"));
+                row.createCell(2).setCellValue(rs.getString("string2"));
+                row.createCell(3).setCellValue(rs.getInt("length1"));
+                row.createCell(4).setCellValue(rs.getInt("length2"));
+                row.createCell(5).setCellValue(rs.getString("combined_string"));
+                row.createCell(6).setCellValue(rs.getString("comparison_result"));
+            }
+
+            try (FileOutputStream fileOut = new FileOutputStream("strings_data.xlsx")) {
+                workbook.write(fileOut);
+            }
+
+            workbook.close();
+            System.out.println("Данные сохранены в Excel файл.");
+        } catch (SQLException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+Sql:
+CREATE TABLE strings_data (
+    id SERIAL PRIMARY KEY,
+    string1 TEXT,
+    string2 TEXT,
+    length1 INT,
+    length2 INT,
+    combined_string TEXT,
+    comparison_result TEXT
+);
