@@ -1,60 +1,111 @@
+Это добавить в pom:
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <version>42.7.4</version>
+</dependency>
+
+Код
 package org.example;
-
-import java.util.*;
 import java.sql.*;
+import java.util.*;
 
-public class BinarySearchDemo {
-    private static final String URL = "jdbc:mysql://localhost:3306/mydatabase";
-    private static final String USER = "root";
-    private static final String PASSWORD = "root";
+
+public class RandomNumberSearch {
+
+    private static final String URL = "jdbc:postgresql://localhost:5432/mydatabase";
+    private static final String USER = "postgres";
+    private static final String PASSWORD = "1";
 
     public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
+        Scanner scanner = new Scanner(System.in);
+
+        // Ввод количества элементов и числового диапазона
         System.out.print("Введите количество элементов: ");
-        int n = sc.nextInt();
-        System.out.print("Введите минимальное значение: ");
-        int minVal = sc.nextInt();
-        System.out.print("Введите максимальное значение: ");
-        int maxVal = sc.nextInt();
+        int count = scanner.nextInt();
+        System.out.print("Введите минимальное значение диапазона: ");
+        int min = scanner.nextInt();
+        System.out.print("Введите максимальное значение диапазона: ");
+        int max = scanner.nextInt();
 
-        Random rnd = new Random();
-        List<Integer> list = new ArrayList<>(n);
-        for (int i = 0; i < n; i++) {
-            list.add(rnd.nextInt(maxVal - minVal + 1) + minVal);
-        }
+        // Генерация случайных чисел
+        List<Integer> numbers = generateRandomNumbers(count, min, max);
 
-        // Сортируем
-        Collections.sort(list);
+        // Сортировка списка
+        Collections.sort(numbers);
+
+        // Ввод числа для поиска
+        System.out.print("Введите число для поиска: ");
+        int searchNumber = scanner.nextInt();
 
         // Бинарный поиск
-        System.out.print("Введите число для поиска: ");
-        int target = sc.nextInt();
-        int index = Collections.binarySearch(list, target);
-        if (index >= 0) {
-            System.out.println("Число найдено на индексе " + index);
-        } else {
-            System.out.println("Число не найдено");
+        boolean found = binarySearch(numbers, searchNumber);
+
+        // Сохранение результата в базу данных
+        saveSearchResultToDatabase(searchNumber, found);
+
+        // Вывод результата из базы данных
+        printSearchResultsFromDatabase();
+    }
+
+    private static List<Integer> generateRandomNumbers(int count, int min, int max) {
+        List<Integer> numbers = new ArrayList<>();
+        Random random = new Random();
+        for (int i = 0; i < count; i++) {
+            numbers.add(random.nextInt((max - min) + 1) + min);
         }
+        return numbers;
+    }
 
-        // Сохранение в БД
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
-            String createSql = "CREATE TABLE IF NOT EXISTS search_list("
-                    + "id INT AUTO_INCREMENT PRIMARY KEY, "
-                    + "val INT)";
-            conn.createStatement().execute(createSql);
-            conn.createStatement().execute("TRUNCATE TABLE search_list");
+    private static boolean binarySearch(List<Integer> numbers, int target) {
+        int left = 0;
+        int right = numbers.size() - 1;
 
-            String insertSql = "INSERT INTO search_list(val) VALUES (?)";
-            try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
-                for (Integer val : list) {
-                    ps.setInt(1, val);
-                    ps.addBatch();
-                }
-                ps.executeBatch();
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            if (numbers.get(mid) == target) {
+                return true;
             }
-            // Можно сохранить и результат поиска, если нужно
-        } catch (SQLException e) {
+            if (numbers.get(mid) < target) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+        return false;
+    }
+
+    private static void saveSearchResultToDatabase(int number, boolean found) {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement pstmt = conn.prepareStatement("INSERT INTO search_results (number, found) VALUES (?, ?)")) {
+
+            pstmt.setInt(1, number);
+            pstmt.setBoolean(2, found);
+            pstmt.executeUpdate();
+            System.out.println("Результат поиска сохранен в базу данных.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void printSearchResultsFromDatabase() {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM search_results")) {
+
+            System.out.println("Результаты поиска из базы данных:");
+            while (rs.next()) {
+                System.out.println("Число: " + rs.getInt("number") + ", Найдено: " + rs.getBoolean("found"));
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 }
+
+Это в sql, читай в одну строку, без табов
+CREATE TABLE search_results (
+    id SERIAL PRIMARY KEY,
+    number INTEGER,
+    found BOOLEAN
+);
