@@ -1,0 +1,62 @@
+package org.example;
+
+import java.io.*;
+import java.util.Scanner;
+
+public class LogCalculator {
+    public static void main(String[] args) {
+        try (Scanner sc = new Scanner(System.in)) {
+            System.out.print("Введите a (>0): ");
+            double a = sc.nextDouble();
+            System.out.print("Введите b (>0): ");
+            double b = sc.nextDouble();
+
+            if (a <= 0 || b <= 0) {
+                System.out.println("Логарифмы не определены для неположительных аргументов.");
+                return;
+            }
+
+            double logA = Math.log10(a);
+            double logB = Math.log10(b);
+
+            System.out.println("Выберите операцию: +, -, *, /, ^");
+            char op = sc.next().charAt(0);
+
+            double result;
+            switch (op) {
+                case '+': // log(a) + log(b) = log(a*b)
+                    result = logA + logB;
+                    break;
+                case '-': // log(a) - log(b) = log(a/b)
+                    result = logA - logB;
+                    break;
+                case '*': // Числовое умножение logA * logB
+                    result = logA * logB;
+                    break;
+                case '/': // Числовое деление logA / logB
+                    if (logB == 0) {
+                        System.out.println("Деление на ноль!");
+                        return;
+                    }
+                    result = logA / logB;
+                    break;
+                case '^': // (logA)^(logB)? Или b*log(a)? Уточняем...
+                    result = Math.pow(logA, logB);
+                    break;
+                default:
+                    System.out.println("Неизвестная операция");
+                    return;
+            }
+
+            System.out.println("Результат: " + result);
+
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter("log_calc_result.txt", true))) {
+                bw.write("Операция " + op + " над log10(" + a + ") и log10(" + b + "): " + result);
+                bw.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
