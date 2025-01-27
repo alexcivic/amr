@@ -1,0 +1,258 @@
+Шаг 1: Создание проекта Spring Boot
+Создайте новый проект Spring Boot с помощью Spring Initializr (https://start.spring.io/). Выберите следующие зависимости:
+•	Spring Web
+•	Spring Security
+•	Spring Data JPA
+•	PostgreSQL Driver
+•	Thymeleaf
+Шаг 2: Настройка базы данных
+Настройте подключение к базе данных PostgreSQL в файле application.properties.
+application.properties:
+spring.datasource.url=jdbc:postgresql://localhost:5432/yourdatabase
+spring.datasource.username=yourusername
+spring.datasource.password=yourpassword
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+Шаг 3: Создание модели данных
+Создайте класс User для представления данных пользователя.
+User.java:
+package com.example.myuser.model;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String username;
+    private String password;
+    private String role;
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+}
+Шаг 4: Создание репозитория для доступа к данным
+Создайте интерфейс UserRepository для доступа к данным.
+UserRepository.java:
+package com.example.myuser.repository;
+
+import com.example.myuser.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    User findByUsername(String username);
+}
+Шаг 5: Создание сервиса для бизнес-логики
+Создайте класс UserService для бизнес-логики.
+UserService.java:
+package com.example.myuser.service;
+
+import com.example.myuser.model.User;
+import com.example.myuser.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserService {
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
+    public User saveUser(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole("ROLE_USER");
+        return userRepository.save(user);
+    }
+
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+}
+Шаг 6: Настройка Spring Security
+Создайте класс SecurityConfig для настройки Spring Security.
+SecurityConfig.java:
+package com.example.myuser.config;
+
+import com.example.myuser.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Autowired
+    private UserService userService;
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+            .authorizeRequests()
+                .antMatchers("/", "/register").permitAll()
+                .anyRequest().authenticated()
+                .and()
+            .formLogin()
+                .loginPage("/login")
+                .permitAll()
+                .and()
+            .logout()
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                .logoutSuccessUrl("/login?logout")
+                .permitAll();
+    }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userService).passwordEncoder(passwordEncoder());
+    }
+
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+Шаг 7: Создание контроллера для обработки HTTP-запросов
+Создайте класс UserController для обработки HTTP-запросов.
+UserController.java:
+package com.example.myuser.controller;
+
+import com.example.myuser.model.User;
+import com.example.myuser.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+
+@Controller
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @GetMapping("/")
+    public String home() {
+        return "home";
+    }
+
+    @GetMapping("/login")
+    public String login() {
+        return "login";
+    }
+
+    @GetMapping("/register")
+    public String register(Model model) {
+        model.addAttribute("user", new User());
+        return "register";
+    }
+
+    @PostMapping("/register")
+    public String registerUser(@ModelAttribute User user) {
+        userService.saveUser(user);
+        return "redirect:/login";
+    }
+}
+Шаг 8: Создание веб-интерфейса
+Создайте HTML-шаблоны для отображения данных пользователей и форм для регистрации и авторизации.
+home.html:
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Home</title>
+</head>
+<body>
+    <h1>Hello World!</h1>
+    <a href="/logout">Logout</a>
+</body>
+</html>
+login.html:
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login</title>
+</head>
+<body>
+    <h1>Login</h1>
+    <form th:action="@{/login}" method="post">
+        <label>Username:</label>
+        <input type="text" name="username" />
+        <br/>
+        <label>Password:</label>
+        <input type="password" name="password" />
+        <br/>
+        <button type="submit">Login</button>
+    </form>
+    <a href="/register">Register</a>
+</body>
+</html>
+register.html:
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Register</title>
+</head>
+<body>
+    <h1>Register</h1>
+    <form th:action="@{/register}" th:object="${user}" method="post">
+        <label>Username:</label>
+        <input type="text" th:field="*{username}" />
+        <br/>
+        <label>Password:</label>
+        <input type="password" th:field="*{password}" />
+        <br/>
+        <button type="submit">Register</button>
+    </form>
+    <a href="/login">Login</a>
+</body>
+</html>
+
