@@ -1,57 +1,105 @@
+Добавить в pom:
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <version>42.7.4</version>
+</dependency>
+
+код
 package org.example;
 
 import java.sql.*;
+
 import java.util.Scanner;
 
-public class GCDExample {
-    private static final String URL = "jdbc:mysql://localhost:3306/mydatabase";
-    private static final String USER = "root";
-    private static final String PASSWORD = "root";
+public class GCDProgram {
 
-    public static int gcdRecursive(int a, int b) {
-        if (b == 0) return a;
+    private static final String URL = "jdbc:postgresql://localhost:5432/mydatabase";
+    private static final String USER = "postgres";
+    private static final String PASSWORD = "1";
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Ввод двух натуральных чисел
+        System.out.print("Введите первое натуральное число: ");
+        int number1 = scanner.nextInt();
+        System.out.print("Введите второе натуральное число: ");
+        int number2 = scanner.nextInt();
+
+        // Нахождение НОД рекурсивным методом
+        int gcdRecursive = gcdRecursive(number1, number2);
+        System.out.println("НОД (рекурсивный метод): " + gcdRecursive);
+
+        // Нахождение НОД итеративным методом
+        int gcdIterative = gcdIterative(number1, number2);
+        System.out.println("НОД (итеративный метод): " + gcdIterative);
+
+        // Сохранение результатов в базу данных
+        saveGCDResultsToDatabase(number1, number2, gcdRecursive, gcdIterative);
+
+        // Вывод результатов из базы данных
+        printGCDResultsFromDatabase();
+    }
+
+    // Рекурсивный метод для нахождения НОД
+    private static int gcdRecursive(int a, int b) {
+        if (b == 0) {
+            return a;
+        }
         return gcdRecursive(b, a % b);
     }
 
-    public static int gcdNonRecursive(int a, int b) {
+    // Итеративный метод для нахождения НОД
+    private static int gcdIterative(int a, int b) {
         while (b != 0) {
-            int t = a % b;
-            a = b;
-            b = t;
+            int temp = b;
+            b = a % b;
+            a = temp;
         }
         return a;
     }
 
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        System.out.print("Введите a: ");
-        int a = sc.nextInt();
-        System.out.print("Введите b: ");
-        int b = sc.nextInt();
+    // Сохранение результатов в базу данных
+    private static void saveGCDResultsToDatabase(int number1, int number2, int gcdRecursive, int gcdIterative) {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement pstmt = conn.prepareStatement("INSERT INTO gcd_results (number1, number2, gcd_recursive, gcd_iterative) VALUES (?, ?, ?, ?)")) {
 
-        int gcdR = gcdRecursive(a, b);
-        int gcdNR = gcdNonRecursive(a, b);
+            pstmt.setInt(1, number1);
+            pstmt.setInt(2, number2);
+            pstmt.setInt(3, gcdRecursive);
+            pstmt.setInt(4, gcdIterative);
+            pstmt.executeUpdate();
+            System.out.println("Результаты сохранены в базу данных.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-        System.out.println("НОД (рекурсия): " + gcdR);
-        System.out.println("НОД (без рекурсии): " + gcdNR);
+    // Вывод результатов из базы данных
+    private static void printGCDResultsFromDatabase() {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM gcd_results")) {
 
-        // Сохранение в БД
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
-            String createSql = "CREATE TABLE IF NOT EXISTS gcd_results("
-                    + "id INT AUTO_INCREMENT PRIMARY KEY,"
-                    + "a INT, b INT, gcd_recursive INT, gcd_nonrecursive INT)";
-            conn.createStatement().execute(createSql);
-
-            String insertSql = "INSERT INTO gcd_results(a,b,gcd_recursive,gcd_nonrecursive) VALUES(?,?,?,?)";
-            try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
-                ps.setInt(1, a);
-                ps.setInt(2, b);
-                ps.setInt(3, gcdR);
-                ps.setInt(4, gcdNR);
-                ps.executeUpdate();
+            System.out.println("Результаты из базы данных:");
+            while (rs.next()) {
+                System.out.println("Число 1: " + rs.getInt("number1") +
+                        ", Число 2: " + rs.getInt("number2") +
+                        ", НОД (рекурсивный): " + rs.getInt("gcd_recursive") +
+                        ", НОД (итеративный): " + rs.getInt("gcd_iterative"));
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 }
+
+код для sql, читай в строчку, табы не нужны:
+CREATE TABLE gcd_results (
+    id SERIAL PRIMARY KEY,
+    number1 INTEGER,
+    number2 INTEGER,
+    gcd_recursive INTEGER,
+    gcd_iterative INTEGER
+);
